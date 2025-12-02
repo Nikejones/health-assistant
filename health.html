@@ -1,0 +1,976 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Virtual Health Assistant</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- jsPDF Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <!-- Fonts: Plus Jakarta Sans for a modern tech feel -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            /* Professional Medical Blue Gradient */
+            background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 50%, #7dd3fc 100%); 
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Glassmorphism Utilities */
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+        }
+        
+        /* Specific Landing Card Glass */
+        .landing-card {
+            background: rgba(255, 255, 255, 0.75);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid rgba(255, 255, 255, 0.9);
+            box-shadow: 0 25px 50px -12px rgba(59, 130, 246, 0.3);
+        }
+
+        .glass-input {
+            background: rgba(255, 255, 255, 0.6);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+        }
+        .glass-input:focus {
+            background: rgba(255, 255, 255, 1);
+            border-color: #3b82f6; /* Blue 500 */
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15);
+        }
+
+        /* Chat Bubbles */
+        .bubble-user {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); /* Blue gradient */
+            box-shadow: 0 4px 15px rgba(37, 99, 235, 0.2);
+            border-bottom-right-radius: 4px !important;
+        }
+        .bubble-assistant {
+            background: white;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
+            border-bottom-left-radius: 4px !important;
+            border: 1px solid rgba(0,0,0,0.02);
+        }
+        .bubble-assistant a {
+            color: #2563eb;
+            text-decoration: underline;
+            font-weight: 600;
+        }
+        /* Markdown styling for chat */
+        .bubble-assistant strong {
+            font-weight: 800;
+            color: #1e3a8a; /* Dark Blue */
+        }
+        .bubble-assistant ul, .bubble-assistant ol {
+            margin-left: 1.25rem;
+            margin-top: 0.5rem;
+            margin-bottom: 0.5rem;
+            list-style-type: disc;
+        }
+        .bubble-assistant li {
+            margin-bottom: 0.25rem;
+        }
+        
+        .bubble-error {
+            background: #fee2e2;
+            color: #b91c1c;
+            border: 1px solid #fca5a5;
+            border-bottom-left-radius: 4px !important;
+        }
+
+        /* Mic Animation */
+        .mic-active {
+            animation: pulse-red 1.5s infinite;
+            background-color: #fee2e2 !important;
+            color: #dc2626 !important;
+        }
+        @keyframes pulse-red {
+            0% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.4); }
+            70% { box-shadow: 0 0 0 10px rgba(220, 38, 38, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0); }
+        }
+
+        /* Robot Animations */
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-12px); }
+            100% { transform: translateY(0px); }
+        }
+        .robot-float {
+            animation: float 4s ease-in-out infinite;
+        }
+        
+        /* Stethoscope Swing */
+        @keyframes swing {
+            0% { transform: rotate(-2deg); }
+            50% { transform: rotate(2deg); }
+            100% { transform: rotate(-2deg); }
+        }
+        .steth-swing {
+            transform-origin: 100px 140px;
+            animation: swing 3s ease-in-out infinite;
+        }
+        
+        @keyframes float-reverse {
+            0% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(15px) rotate(5deg); }
+            100% { transform: translateY(0px) rotate(0deg); }
+        }
+        .float-icon {
+            animation: float-reverse 5s ease-in-out infinite;
+        }
+
+        @keyframes blink {
+            0%, 90%, 100% { transform: scaleY(1); }
+            95% { transform: scaleY(0.1); }
+        }
+        .robot-eye {
+            transform-origin: center;
+            animation: blink 3s infinite;
+        }
+
+        @keyframes glow {
+            0%, 100% { fill: #ef4444; filter: drop-shadow(0 0 2px #ef4444); }
+            50% { fill: #fca5a5; filter: drop-shadow(0 0 8px #ef4444); }
+        }
+        .robot-light {
+            animation: glow 2s infinite;
+        }
+
+        @keyframes scan {
+            0% { transform: translateY(0); opacity: 0; }
+            50% { opacity: 0.5; }
+            100% { transform: translateY(100px); opacity: 0; }
+        }
+        .scan-line {
+            animation: scan 2s linear infinite;
+        }
+
+        /* Page Transitions */
+        @keyframes slideUpFade {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-enter {
+            animation: slideUpFade 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        
+        .delay-100 { animation-delay: 0.1s; }
+        .delay-200 { animation-delay: 0.2s; }
+        .delay-300 { animation-delay: 0.3s; }
+
+        /* Custom Scrollbar */
+        .custom-scroll::-webkit-scrollbar {
+            width: 6px;
+        }
+        .custom-scroll::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-scroll::-webkit-scrollbar-thumb {
+            background: rgba(0,0,0,0.1);
+            border-radius: 10px;
+        }
+        .custom-scroll::-webkit-scrollbar-thumb:hover {
+            background: rgba(0,0,0,0.2);
+        }
+
+        /* Typing Indicator Bounce */
+        .typing-dot {
+            animation: typingBounce 1.4s infinite ease-in-out both;
+        }
+        .typing-dot:nth-child(1) { animation-delay: -0.32s; }
+        .typing-dot:nth-child(2) { animation-delay: -0.16s; }
+        
+        @keyframes typingBounce {
+            0%, 80%, 100% { transform: scale(0); }
+            40% { transform: scale(1); }
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center p-4 relative overflow-hidden">
+
+    <!-- Animated Background Elements (Landing Page specific) -->
+    <div id="bg-decorations" class="absolute inset-0 pointer-events-none overflow-hidden">
+        <!-- Circles -->
+        <div class="absolute top-[-10%] left-[-10%] w-96 h-96 bg-blue-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob"></div>
+        <div class="absolute top-[-10%] right-[-10%] w-96 h-96 bg-cyan-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-2000"></div>
+        <div class="absolute -bottom-32 left-20 w-96 h-96 bg-indigo-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-4000"></div>
+        
+        <!-- Floating Medical Icons -->
+        <div class="absolute top-20 left-10 float-icon" style="animation-delay: 0s;">
+            <svg class="w-16 h-16 text-blue-200 opacity-60 transform rotate-12" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M18.944 11.556a5.5 5.5 0 0 0-7.778-7.778l-3.11 3.111a5.5 5.5 0 0 0 7.777 7.778l3.111-3.111zM8.056 12.444a5.5 5.5 0 0 0 7.778 7.778l3.11-3.111a5.5 5.5 0 0 0-7.777-7.778l-3.111 3.111z"/>
+            </svg>
+        </div>
+        <div class="absolute bottom-20 right-10 float-icon" style="animation-delay: 2s;">
+            <svg class="w-20 h-20 text-pink-200 opacity-50" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+            </svg>
+        </div>
+        <div class="absolute top-1/2 right-20 float-icon" style="animation-delay: 1s;">
+            <svg class="w-12 h-12 text-green-200 opacity-60" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
+            </svg>
+        </div>
+    </div>
+
+    <!-- Main Container Card -->
+    <div class="glass-panel w-full max-w-5xl h-[90vh] max-h-[850px] rounded-3xl shadow-2xl flex flex-col overflow-hidden relative z-10 animate-enter">
+
+        <!-- Header -->
+        <header id="app-header" class="hidden bg-white/50 backdrop-blur-md border-b border-white/40 p-5 flex justify-between items-center z-20">
+            <div class="flex items-center gap-4">
+                <div class="relative">
+                    <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-blue-500 to-indigo-500 flex items-center justify-center text-white shadow-lg shadow-blue-500/30">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd" />
+                        </svg>
+                    </div>
+                    <span class="absolute -bottom-1 -right-1 flex h-4 w-4">
+                      <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                      <span class="relative inline-flex rounded-full h-4 w-4 bg-green-500 border-2 border-white"></span>
+                    </span>
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold text-gray-800 tracking-tight">MediAssist AI</h1>
+                    <p class="text-xs font-medium text-gray-500 uppercase tracking-wider">Virtual Health Companion</p>
+                </div>
+            </div>
+            
+            <button id="back-to-profile-btn" type="button" class="group p-2 rounded-xl hover:bg-white/80 transition-all duration-300" title="Edit Profile">
+                <div class="flex items-center gap-2 text-gray-500 group-hover:text-blue-600">
+                    <span class="text-sm font-semibold hidden sm:block">Profile</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    </svg>
+                </div>
+            </button>
+        </header>
+
+        <!-- CONTENT AREA -->
+        <div class="flex-1 relative overflow-hidden bg-white/30">
+
+            <!-- 0. LANDING PAGE (Enhanced) -->
+            <main id="landing-page" class="absolute inset-0 flex flex-col items-center justify-center p-6 z-40 bg-transparent transition-all duration-700">
+                
+                <div class="landing-card w-full max-w-lg p-8 rounded-[2.5rem] text-center animate-enter relative overflow-hidden flex flex-col justify-center min-h-[400px]">
+                    
+                    <!-- Scanning Effect overlay -->
+                    <div class="absolute inset-0 bg-gradient-to-b from-transparent via-blue-100/20 to-transparent scan-line pointer-events-none"></div>
+
+                    <!-- Robot Illustration (SVG) -->
+                    <div class="robot-float mb-6 mx-auto w-40 h-40 filter drop-shadow-xl relative z-10">
+                       <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+                           <defs>
+                               <linearGradient id="robotGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                   <stop offset="0%" style="stop-color:#60a5fa;stop-opacity:1" />
+                                   <stop offset="100%" style="stop-color:#2563eb;stop-opacity:1" />
+                               </linearGradient>
+                               <!-- NEW Gradients for Realistic Stethoscope -->
+                               <linearGradient id="tubeGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                                   <stop offset="0%" style="stop-color:#334155" /> <!-- Dark grey edge -->
+                                   <stop offset="50%" style="stop-color:#64748b" /> <!-- Lighter grey center highlight -->
+                                   <stop offset="100%" style="stop-color:#334155" />
+                               </linearGradient>
+                               <linearGradient id="metalGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                   <stop offset="0%" style="stop-color:#94a3b8" /> <!-- Metallic shadow -->
+                                   <stop offset="30%" style="stop-color:#f1f5f9" /> <!-- Metallic shine -->
+                                   <stop offset="100%" style="stop-color:#64748b" />
+                               </linearGradient>
+                               <radialGradient id="diaphragmGrad" cx="50%" cy="50%" r="50%" fx="50%" fy="50%">
+                                   <stop offset="70%" style="stop-color:#e2e8f0" /> <!-- Light face -->
+                                   <stop offset="100%" style="stop-color:#94a3b8" /> <!-- darker rim -->
+                               </radialGradient>
+                           </defs>
+                           
+                           <!-- NEW Realistic Headset & Tubing (positioned behind head layer) -->
+                           <!-- Metal ear tubes angled into head -->
+                           <path d="M40 65 L 30 65 Q 20 65 20 90 L 20 115" fill="none" stroke="url(#metalGrad)" stroke-width="3" stroke-linecap="round" />
+                           <path d="M160 65 L 170 65 Q 180 65 180 90 L 180 115" fill="none" stroke="url(#metalGrad)" stroke-width="3" stroke-linecap="round" />
+                           <!-- Black ear tips -->
+                           <ellipse cx="40" cy="65" rx="4" ry="6" fill="#1e293b" />
+                           <ellipse cx="160" cy="65" rx="4" ry="6" fill="#1e293b" />
+                           <!-- Main flexible rubber tubing with 3D gradient -->
+                           <path d="M20 115 Q 20 165 100 165 Q 180 165 180 115" fill="none" stroke="url(#tubeGrad)" stroke-width="6" stroke-linecap="round" />
+                           <!-- Metal Y-junction connector piece -->
+                           <path d="M94 162 L 106 162 L 103 170 L 97 170 Z" fill="url(#metalGrad)" />
+
+                           <!-- Head -->
+                           <rect x="60" y="40" width="80" height="70" rx="15" fill="url(#robotGrad)" />
+                           <!-- Eyes -->
+                           <g class="robot-eye">
+                               <circle cx="85" cy="70" r="8" fill="white" />
+                               <circle cx="85" cy="70" r="3" fill="#1e3a8a" />
+                           </g>
+                           <g class="robot-eye">
+                               <circle cx="115" cy="70" r="8" fill="white" />
+                               <circle cx="115" cy="70" r="3" fill="#1e3a8a" />
+                           </g>
+                           <!-- Antenna -->
+                           <line x1="100" y1="40" x2="100" y2="20" stroke="#2563eb" stroke-width="4" />
+                           <circle cx="100" cy="15" r="5" class="robot-light" fill="#ef4444" />
+                           
+                           <!-- Body -->
+                           <path d="M50 120 Q100 180 150 120 L150 190 L50 190 Z" fill="white" stroke="#cbd5e1" stroke-width="2" />
+                           <!-- Cross -->
+                           <rect x="92" y="140" width="16" height="40" fill="#ef4444" rx="2"/>
+                           <rect x="80" y="152" width="40" height="16" fill="#ef4444" rx="2"/>
+
+                           <!-- Stethoscope (Front/Chest piece) - Animated Swing -->
+                           <g class="steth-swing">
+                               <!-- Tubing stem down from Y-junction -->
+                               <line x1="100" y1="170" x2="100" y2="182" stroke="url(#tubeGrad)" stroke-width="4" />
+                               
+                               <!-- Realistic Chest Piece Head -->
+                               <!-- Metal Rim casing -->
+                               <circle cx="100" cy="192" r="12" fill="url(#metalGrad)" stroke="#475569" stroke-width="0.5" />
+                               <!-- Diaphragm face -->
+                               <circle cx="100" cy="192" r="10" fill="url(#diaphragmGrad)" stroke="#cbd5e1" stroke-width="0.5" />
+                               <!-- Central screw/hub -->
+                               <circle cx="100" cy="192" r="1.5" fill="#475569" />
+                           </g>
+                       </svg>
+                    </div>
+                    
+                    <h1 class="text-3xl sm:text-4xl font-extrabold text-gray-900 mb-3 tracking-tight animate-enter delay-100">
+                        MediAssist <span class="text-blue-600">AI</span>
+                    </h1>
+                    <p class="text-base sm:text-lg text-gray-600 mb-8 leading-relaxed animate-enter delay-200">
+                        Your intelligent 24/7 virtual health companion. Experience instant symptom analysis, personalized care guidance, and emergency support.
+                    </p>
+                    
+                    <button id="get-started-btn" class="group relative inline-flex items-center justify-center px-8 py-3.5 text-lg font-bold text-white transition-all duration-200 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-600 hover:shadow-xl hover:shadow-blue-500/30 transform hover:-translate-y-1 animate-enter delay-300 w-full sm:w-auto mx-auto">
+                        Get Started
+                        <svg class="w-5 h-5 ml-2 transition-all duration-200 group-hover:translate-x-1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clip-rule="evenodd" />
+                        </svg>
+                    </button>
+                </div>
+            </main>
+
+            <!-- 1. Profile Page -->
+            <main id="profile-page" class="absolute inset-0 flex flex-col items-center justify-center p-6 overflow-y-auto custom-scroll z-30 translate-y-full transition-transform duration-500 ease-in-out opacity-0">
+                <div class="w-full max-w-lg bg-white/70 backdrop-blur-xl p-8 rounded-3xl shadow-xl border border-white/50">
+                    <div class="text-center mb-6">
+                        <h2 class="text-3xl font-extrabold text-gray-800 mb-2">Your Profile</h2>
+                        <p class="text-gray-500">Help us understand you better for accurate advice.</p>
+                    </div>
+                    
+                    <!-- Profile Error Message -->
+                    <div id="profile-error-box" class="hidden mb-6 p-4 bg-red-50 border-l-4 border-red-500 text-red-700 rounded-r-lg text-sm">
+                        <div class="flex items-center gap-2">
+                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
+                            <p id="profile-error-message">Error details here.</p>
+                        </div>
+                    </div>
+
+                    <div class="space-y-4">
+                        <div class="group">
+                            <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1 ml-1">Full Name</label>
+                            <input type="text" id="name" class="glass-input block w-full px-4 py-3 rounded-xl outline-none text-gray-700 placeholder-gray-400" placeholder="Jane Doe">
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="group">
+                                <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1 ml-1">Age</label>
+                                <input type="number" id="age" class="glass-input block w-full px-4 py-3 rounded-xl outline-none text-gray-700 placeholder-gray-400" placeholder="25">
+                            </div>
+                            <div class="group">
+                                <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1 ml-1">Sex</label>
+                                <select id="sex" class="glass-input block w-full px-4 py-3 rounded-xl outline-none text-gray-700 bg-transparent">
+                                    <option>Male</option>
+                                    <option>Female</option>
+                                    <option>Prefer not to say</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="group">
+                            <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1 ml-1">Location</label>
+                            <input type="text" id="location" class="glass-input block w-full px-4 py-3 rounded-xl outline-none text-gray-700 placeholder-gray-400" placeholder="New York, USA">
+                        </div>
+
+                        <!-- Vitals Section -->
+                        <div class="bg-blue-50/50 rounded-xl p-4 border border-blue-100">
+                            <label class="block text-xs font-bold text-blue-600 uppercase tracking-wider mb-2 flex items-center gap-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd" />
+                                </svg>
+                                Vitals (Optional)
+                            </label>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <input type="number" id="heart-rate" class="glass-input block w-full px-3 py-2 rounded-lg text-sm outline-none text-gray-700 placeholder-gray-400" placeholder="Heart Rate (BPM)">
+                                </div>
+                                <div>
+                                    <input type="number" id="spo2" class="glass-input block w-full px-3 py-2 rounded-lg text-sm outline-none text-gray-700 placeholder-gray-400" placeholder="SpO2 (%)">
+                                </div>
+                            </div>
+                        </div>
+
+                        <button id="save-profile-btn" type="button" class="w-full mt-4 py-4 px-6 rounded-xl shadow-lg shadow-blue-500/40 text-white font-bold bg-gradient-to-r from-blue-500 via-blue-600 to-indigo-600 hover:from-blue-600 hover:via-blue-700 hover:to-indigo-700 transform transition-all hover:scale-[1.02] active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                            Start Consultation
+                        </button>
+                    </div>
+                </div>
+            </main>
+
+            <!-- 2. Chat Page -->
+            <main id="chat-page" class="absolute inset-0 flex flex-col translate-x-full transition-transform duration-500 ease-in-out bg-white/40">
+                <!-- Chat Messages Area -->
+                <div id="chat-messages" class="flex-1 p-4 sm:p-6 space-y-6 overflow-y-auto custom-scroll flex flex-col">
+                    <!-- Dynamic Messages injected here -->
+                    <div class="text-center py-10 text-gray-400 text-sm">
+                        <p>MediAssist AI Ready</p>
+                        <p>Powered by Google Gemini</p>
+                    </div>
+                </div>
+
+                <!-- Input Area -->
+                <div class="p-4 bg-white/80 backdrop-blur-xl border-t border-white/50">
+                    
+                    <!-- Image Preview -->
+                    <div id="image-preview-container" class="hidden absolute bottom-full left-6 mb-2 bg-white p-2 rounded-xl shadow-lg border border-gray-100 animate-enter">
+                        <div class="relative group">
+                            <img id="image-preview" src="" alt="Preview" class="h-20 w-20 rounded-lg object-cover">
+                            <button id="remove-image-btn" type="button" class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 shadow-md hover:bg-red-600 transition-colors">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Input Bar -->
+                    <div class="max-w-4xl mx-auto flex items-end gap-2 bg-white rounded-3xl shadow-xl shadow-blue-100/50 p-2 border border-gray-100">
+                        
+                        <!-- Tools Menu -->
+                        <div class="flex items-center gap-1 pl-2 pb-1.5">
+                            <button id="image-upload-btn" type="button" class="p-2.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-full transition-all" title="Analyze Image">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                </svg>
+                            </button>
+                            <input type="file" id="image-upload-input" class="hidden" accept="image/*">
+                            
+                            <button id="pdf-button" type="button" class="p-2.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-full transition-all" title="Download Report">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                                </svg>
+                            </button>
+                        </div>
+
+                        <!-- Text Input -->
+                        <textarea id="chat-input" rows="1" class="flex-1 bg-transparent border-0 focus:ring-0 text-gray-700 placeholder-gray-400 resize-none py-3 max-h-32" placeholder="Describe your symptoms..."></textarea>
+
+                        <!-- Mic Button -->
+                        <button id="mic-btn" type="button" class="p-2.5 mb-1 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-full transition-all" title="Speak">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+                            </svg>
+                        </button>
+
+                        <!-- Send Button -->
+                        <button id="send-btn" type="button" class="p-3 mb-1 mr-1 rounded-2xl bg-blue-600 text-white shadow-lg shadow-blue-500/30 hover:bg-blue-700 hover:scale-105 active:scale-95 transition-all duration-200">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 transform rotate-90 translate-x-px" viewBox="0 0 20 20" fill="currentColor">
+                                <path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Emergency Modal -->
+    <div id="emergency-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div class="absolute inset-0 bg-red-900/40 backdrop-blur-sm animate-enter"></div>
+        <div class="relative bg-white rounded-3xl shadow-2xl p-8 max-w-md w-full animate-enter border border-red-100 overflow-hidden">
+            <div class="relative flex flex-col items-center text-center">
+                <div class="w-20 h-20 rounded-full bg-red-50 border-4 border-red-100 flex items-center justify-center mb-6 shadow-inner">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-red-600 animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                </div>
+                <h2 class="text-2xl font-bold text-gray-900 mb-2">Emergency Detected</h2>
+                <p id="emergency-message" class="text-gray-600 mb-6 leading-relaxed">Based on your symptoms, your situation may require immediate professional attention.</p>
+                <div id="referral-info" class="w-full bg-red-50 border border-red-100 rounded-xl p-5 text-left mb-6 relative hidden">
+                    <div class="absolute top-0 left-0 w-1 h-full bg-red-400 rounded-l-xl"></div>
+                    <h4 class="font-bold text-red-800 text-sm uppercase tracking-wide mb-1">Recommended Action</h4>
+                    <p id="referral-text" class="text-gray-800 font-medium text-sm">Please go to the nearest emergency room or contact local emergency services immediately.</p>
+                </div>
+                <button id="close-modal-btn" type="button" class="w-full py-3.5 px-4 bg-red-600 text-white font-bold rounded-xl shadow-lg shadow-red-500/30 hover:bg-red-700 transform hover:scale-[1.02] transition-all">
+                    I Understand
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+
+            // --- Globals ---
+            let userProfile = {};
+            let chatHistory = []; 
+            let imageBase64 = null;
+            let recognition = null;
+            
+            const SYSTEM_PROMPT = `You are an AI Virtual Health Assistant. Your role is to interact with a user, understand their health symptoms, and provide personalized, safe suggestions.
+You are NOT a doctor and you MUST NOT provide a diagnosis.
+Your primary goals are:
+1.  **Analyze Symptoms**: Ask clarifying questions to understand the user's symptoms.
+2.  **Provide Suggestions**: Offer safe, general health advice.
+3.  **Predictive Analysis**: Suggest potential causes or conditions matching the symptoms. Suggest common over-the-counter medicines but ALWAYS include a disclaimer.
+4.  **Emergency Triage**: If a user's symptoms sound critical (e.g., chest pain, difficulty breathing, severe bleeding), you MUST respond with:
+    a.  A clear statement: "Based on your description, this could be a medical emergency."
+    b.  The tag: [EMERGENCY]
+    c.  A referral block: [REFERRAL_INFO] **IMMEDIATELY** Search for and provide 2-3 nearby hospitals in [User Location] based on the profile. Include names, addresses, and links.[/REFERRAL_INFO]
+5.  **Hospital Selection**: After providing a list of hospitals, EXPLICITLY ask: "Which of these hospitals would you like to include in your downloadable report?"
+6.  **Format**: Use simple Markdown (**bold**) for important text.`;
+
+            // --- DOM Elements ---
+            const landingPage = document.getElementById('landing-page');
+            const profilePage = document.getElementById('profile-page');
+            const chatPage = document.getElementById('chat-page');
+            const appHeader = document.getElementById('app-header');
+            const bgDecorations = document.getElementById('bg-decorations');
+            
+            const getStartedBtn = document.getElementById('get-started-btn');
+            const saveProfileBtn = document.getElementById('save-profile-btn');
+            const backToProfileBtn = document.getElementById('back-to-profile-btn');
+            
+            const nameInput = document.getElementById('name');
+            const ageInput = document.getElementById('age');
+            const sexInput = document.getElementById('sex');
+            const locationInput = document.getElementById('location');
+            const heartRateInput = document.getElementById('heart-rate');
+            const spo2Input = document.getElementById('spo2');
+            const profileErrorBox = document.getElementById('profile-error-box');
+            const profileErrorMessage = document.getElementById('profile-error-message');
+
+            const chatMessages = document.getElementById('chat-messages');
+            const chatInput = document.getElementById('chat-input');
+            const sendBtn = document.getElementById('send-btn');
+            const imageUploadBtn = document.getElementById('image-upload-btn');
+            const imageUploadInput = document.getElementById('image-upload-input');
+            const imagePreviewContainer = document.getElementById('image-preview-container');
+            const imagePreview = document.getElementById('image-preview');
+            const removeImageBtn = document.getElementById('remove-image-btn');
+            const pdfButton = document.getElementById('pdf-button');
+            const micBtn = document.getElementById('mic-btn');
+
+            const emergencyModal = document.getElementById('emergency-modal');
+            const closeModalBtn = document.getElementById('close-modal-btn');
+            const emergencyMessage = document.getElementById('emergency-message');
+            const referralInfo = document.getElementById('referral-info');
+            const referralText = document.getElementById('referral-text');
+
+            // --- Speech Init ---
+            if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+            
+            if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+                const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+                recognition = new SpeechRecognition();
+                recognition.continuous = false;
+                recognition.lang = 'en-US';
+                recognition.interimResults = false;
+
+                recognition.onstart = () => {
+                    micBtn.classList.add('mic-active');
+                    chatInput.placeholder = "Listening...";
+                };
+                recognition.onend = () => {
+                    micBtn.classList.remove('mic-active');
+                    chatInput.placeholder = "Describe your symptoms...";
+                };
+                recognition.onresult = (event) => {
+                    chatInput.value = event.results[0][0].transcript;
+                };
+
+                micBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    if (micBtn.classList.contains('mic-active')) recognition.stop();
+                    else try { recognition.start(); } catch (err) { console.error(err); }
+                });
+            } else {
+                micBtn.style.display = 'none';
+            }
+
+            // --- Event Listeners ---
+
+            // Landing Page -> Profile
+            getStartedBtn.addEventListener('click', () => {
+                landingPage.style.opacity = '0';
+                landingPage.style.transform = 'translateY(-100%)';
+                bgDecorations.style.opacity = '0'; // Fade out landing decorations
+                setTimeout(() => {
+                    landingPage.classList.add('hidden');
+                    appHeader.classList.remove('hidden'); // Show header
+                    profilePage.classList.remove('translate-y-full', 'opacity-0'); // Slide in profile
+                }, 500);
+            });
+
+            // Profile -> Chat
+            saveProfileBtn.addEventListener('click', handleProfileSave);
+
+            // Back to Profile
+            backToProfileBtn.addEventListener('click', () => {
+                if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+                chatPage.classList.remove('translate-x-0');
+                chatPage.classList.add('translate-x-full');
+                setTimeout(() => {
+                    profilePage.classList.remove('-translate-x-full');
+                    profilePage.classList.add('translate-x-0');
+                }, 50);
+            });
+
+            sendBtn.addEventListener('click', handleSendMessage);
+            chatInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    handleSendMessage();
+                }
+            });
+            imageUploadBtn.addEventListener('click', () => imageUploadInput.click());
+            imageUploadInput.addEventListener('change', handleImageSelect);
+            removeImageBtn.addEventListener('click', clearImagePreview);
+            closeModalBtn.addEventListener('click', () => emergencyModal.classList.add('hidden'));
+            pdfButton.addEventListener('click', generatePDFReport);
+            
+            window.addEventListener('beforeunload', () => {
+                if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+            });
+
+            // --- Functions ---
+
+            function handleProfileSave() {
+                const name = nameInput.value.trim();
+                const age = ageInput.value.trim();
+                const location = locationInput.value.trim();
+
+                if (!name || !age || !location) {
+                    showProfileError("Please fill out Name, Age and Location.");
+                    return;
+                }
+
+                userProfile = {
+                    name, age, sex: sexInput.value, location,
+                    heartRate: heartRateInput.value.trim(),
+                    spo2: spo2Input.value.trim()
+                };
+                
+                chatMessages.innerHTML = ''; 
+                primeChatHistory();
+                
+                // Slide Profile Left, Slide Chat In
+                profilePage.classList.remove('translate-x-0');
+                profilePage.classList.add('-translate-x-full');
+                chatPage.classList.remove('translate-x-full');
+                chatPage.classList.add('translate-x-0');
+            }
+
+            function primeChatHistory() {
+                let vitalInfo = "";
+                if (userProfile.heartRate) vitalInfo += `, Heart Rate: ${userProfile.heartRate} BPM`;
+                if (userProfile.spo2) vitalInfo += `, SpO2: ${userProfile.spo2}%`;
+
+                chatHistory = [
+                    { role: "user", parts: [{ text: `Profile: ${userProfile.name}, ${userProfile.age}, ${userProfile.sex}, ${userProfile.location}${vitalInfo}.` }] },
+                    { role: "model", parts: [{ text: `Hello ${userProfile.name}, I'm MediAssist. How are you feeling today?` }] }
+                ];
+                addMessageToUI('assistant', `Hello ${userProfile.name}, I'm MediAssist. How are you feeling today?`);
+            }
+
+            function showProfileError(message) {
+                profileErrorMessage.textContent = message;
+                profileErrorBox.classList.remove('hidden');
+            }
+
+            async function handleSendMessage() {
+                const text = chatInput.value.trim();
+                if (!text && !imageBase64) return;
+
+                const displayMsg = text || (imageBase64 ? "Image uploaded." : "");
+                addMessageToUI('user', displayMsg, imageBase64);
+                
+                chatInput.value = '';
+                const currentImage = imageBase64;
+                clearImagePreview();
+
+                const indicatorId = addTypingIndicator();
+
+                try {
+                    const rawResponse = await callGeminiApi(text, currentImage);
+                    document.getElementById(indicatorId)?.remove();
+
+                    if (rawResponse) {
+                        // Clean tags for display
+                        const cleanResponse = rawResponse
+                            .replace(/\[EMERGENCY\]/g, '')
+                            .replace(/\[REFERRAL_INFO\]/g, '')
+                            .replace(/\[\/REFERRAL_INFO\]/g, '');
+                        
+                        // Bold text formatting logic: **text** -> <strong>text</strong>
+                        const formattedResponse = cleanResponse.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+
+                        addMessageToUI('assistant', formattedResponse);
+                        checkForEmergency(rawResponse);
+                    }
+                } catch (err) {
+                    document.getElementById(indicatorId)?.remove();
+                    addMessageToUI('error', `Error: ${err.message}`);
+                }
+            }
+
+            async function callGeminiApi(textPrompt, base64Image) {
+                const userMsg = { role: "user", parts: [{ text: textPrompt }] };
+                if (base64Image) userMsg.parts.push({ inlineData: { mimeType: "image/jpeg", data: base64Image } });
+                
+                chatHistory.push(userMsg);
+                if (chatHistory.length > 20) chatHistory = [chatHistory[0], chatHistory[1], ...chatHistory.slice(-18)];
+
+                try {
+                    const response = await makeApiCallWithRetry(chatHistory);
+                    chatHistory.push({ role: "model", parts: [{ text: response }] });
+                    return response;
+                } catch (e) {
+                    chatHistory.pop();
+                    throw e;
+                }
+            }
+
+            async function makeApiCallWithRetry(messages, retries = 2) {
+                const apiKey = ""; 
+                const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+                const payload = { contents: messages, tools: [{ google_search: {} }], systemInstruction: { parts: [{ text: SYSTEM_PROMPT }] } };
+
+                for (let i = 0; i <= retries; i++) {
+                    try {
+                        const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                        if (!res.ok) throw new Error(res.statusText);
+                        const data = await res.json();
+                        return data.candidates?.[0]?.content?.parts?.[0]?.text || "No response.";
+                    } catch (e) {
+                        if (i === retries) throw e;
+                        await new Promise(r => setTimeout(r, 1000));
+                    }
+                }
+            }
+
+            function addTypingIndicator() {
+                const id = 'typing-' + Date.now();
+                const bubble = document.createElement('div');
+                bubble.id = id;
+                bubble.className = 'bubble-assistant self-start mr-auto p-4 rounded-2xl rounded-bl-none flex gap-1 items-center w-16 h-12 animate-enter';
+                bubble.innerHTML = '<div class="typing-dot w-2 h-2 bg-gray-400 rounded-full"></div><div class="typing-dot w-2 h-2 bg-gray-400 rounded-full"></div><div class="typing-dot w-2 h-2 bg-gray-400 rounded-full"></div>';
+                chatMessages.appendChild(bubble);
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+                return id;
+            }
+
+            function addMessageToUI(role, text, imageBase64 = null) {
+                const bubble = document.createElement('div');
+                bubble.className = `p-4 rounded-2xl w-fit max-w-[85%] text-sm leading-relaxed animate-enter ${role === 'user' ? 'bubble-user text-white self-end ml-auto rounded-br-none' : (role === 'error' ? 'bubble-error self-center mx-auto text-center font-medium' : 'bubble-assistant text-gray-700 self-start mr-auto rounded-bl-none')}`;
+                
+                if (imageBase64) {
+                    const img = document.createElement('img');
+                    img.src = `data:image/jpeg;base64,${imageBase64}`;
+                    img.className = 'rounded-lg mb-2 max-h-60 w-full object-cover';
+                    bubble.appendChild(img);
+                }
+
+                const container = document.createElement('div');
+                container.className = 'flex flex-col gap-2';
+                
+                const textNode = document.createElement('div');
+                const linkified = text.replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank">$1</a>');
+                textNode.innerHTML = linkified.replace(/\n/g, '<br>');
+                container.appendChild(textNode);
+
+                if (role === 'assistant') {
+                    const ttsBtn = document.createElement('button');
+                    ttsBtn.type = 'button';
+                    ttsBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-400 hover:text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" /></svg>';
+                    ttsBtn.className = 'self-end mt-1 p-1 rounded-full hover:bg-gray-100 transition-colors';
+                    ttsBtn.onclick = () => speakText(textNode.innerText);
+                    container.appendChild(ttsBtn);
+                }
+
+                bubble.appendChild(container);
+                chatMessages.appendChild(bubble);
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }
+
+            function speakText(text) {
+                if (!window.speechSynthesis) return alert("TTS not supported");
+                if (window.speechSynthesis.speaking) {
+                    window.speechSynthesis.cancel();
+                } else {
+                    const u = new SpeechSynthesisUtterance(text);
+                    window.speechSynthesis.speak(u);
+                }
+            }
+
+            function handleImageSelect(e) {
+                const file = e.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = (ev) => {
+                    imageBase64 = ev.target.result.split(',')[1];
+                    imagePreview.src = ev.target.result;
+                    imagePreviewContainer.classList.remove('hidden');
+                };
+                reader.readAsDataURL(file);
+            }
+
+            function clearImagePreview() {
+                imageBase64 = null;
+                imageUploadInput.value = '';
+                imagePreviewContainer.classList.add('hidden');
+            }
+
+            function checkForEmergency(text) {
+                if (text.includes('[EMERGENCY]')) {
+                    const referralMatch = text.match(/\[REFERRAL_INFO\]([\s\S]*?)\[\/REFERRAL_INFO\]/);
+                    referralText.innerHTML = referralMatch ? referralMatch[1].replace(/\n/g, '<br>') : "Please seek immediate medical help.";
+                    referralInfo.classList.remove('hidden');
+                    
+                    let cleanMsg = text.replace(/\[REFERRAL_INFO\][\s\S]*?\[\/REFERRAL_INFO\]/g, '').split('[EMERGENCY]')[0].trim();
+                    emergencyMessage.textContent = cleanMsg.substring(0, 200) + "...";
+                    emergencyModal.classList.remove('hidden');
+                }
+            }
+
+            function drawRobotWatermark(doc) {
+                // Define lighter colors for watermark effect
+                const drawColor = [200, 220, 255]; // Light blue outline
+                const fillColor = [240, 248, 255]; // Very light fill (AliceBlue-ish)
+                
+                doc.setDrawColor(...drawColor);
+                doc.setFillColor(...fillColor);
+                doc.setLineWidth(0.5);
+
+                // Center coordinates for A4 (210mm width)
+                const centerX = 105;
+                const centerY = 148;
+                const scale = 0.8; // Large watermark scale
+
+                // --- Robot Drawing Logic (Vector approximation) ---
+                
+                // Stethoscope - Background part
+                doc.lines([[0, 20*scale], [0, 50*scale], [70*scale, 0], [0, -50*scale], [0, -20*scale]], centerX - (35*scale), centerY - (100*scale), [1,1], 'D', true);
+
+                // Head
+                doc.roundedRect(centerX - (40 * scale), centerY - (80 * scale), 80 * scale, 70 * scale, 5, 5, 'FD');
+                
+                // Eyes (Just outlines/light fills)
+                doc.circle(centerX - (15 * scale), centerY - (50 * scale), 8 * scale, 'FD');
+                doc.circle(centerX + (15 * scale), centerY - (50 * scale), 8 * scale, 'FD');
+
+                // Antenna
+                doc.line(centerX, centerY - (80 * scale), centerX, centerY - (100 * scale));
+                doc.circle(centerX, centerY - (105 * scale), 5 * scale, 'FD');
+
+                // Body
+                doc.roundedRect(centerX - (50 * scale), centerY + (0 * scale), 100 * scale, 70 * scale, 5, 5, 'FD');
+
+                // Cross (Watermark style - simplified)
+                doc.rect(centerX - (8 * scale), centerY + (20 * scale), 16 * scale, 30 * scale, 'F');
+                doc.rect(centerX - (15 * scale), centerY + (27 * scale), 30 * scale, 16 * scale, 'F');
+                
+                // Stethoscope - Chest piece
+                doc.circle(centerX, centerY + (45 * scale), 10 * scale, 'FD');
+
+                // Reset colors for text
+                doc.setTextColor(0, 0, 0);
+                doc.setDrawColor(0, 0, 0);
+            }
+
+            async function generatePDFReport() {
+                addMessageToUI('assistant', 'Generating PDF report...');
+                try {
+                    const prompt = "Provide a JSON object: {symptoms, recommendations, referrals, selected_hospital, critical (bool)}.";
+                    chatHistory.push({ role: "user", parts: [{ text: prompt }] });
+                    const raw = await makeApiCallWithRetry(chatHistory);
+                    chatHistory.pop();
+
+                    let summary = { symptoms: "N/A", recommendations: "N/A", referrals: "N/A", selected_hospital: "None", critical: false };
+                    const jsonMatch = raw.match(/\{[\s\S]*\}/);
+                    if (jsonMatch) summary = { ...summary, ...JSON.parse(jsonMatch[0]) };
+
+                    const { jsPDF } = window.jspdf;
+                    const doc = new jsPDF();
+                    const brandColor = "#2563eb";
+
+                    // 1. Draw Background Watermark First
+                    drawRobotWatermark(doc);
+
+                    // 2. Draw Header
+                    doc.setFillColor(brandColor);
+                    doc.rect(0, 0, 210, 40, 'F');
+                    
+                    doc.setFontSize(22);
+                    doc.setFont("helvetica", "bold");
+                    doc.setTextColor(255, 255, 255);
+                    doc.text("Medical Consultation Report", 20, 25);
+                    doc.setFontSize(10);
+                    doc.text("Generated by MediAssist AI", 20, 32);
+
+                    // 3. Patient Details
+                    doc.setTextColor(0, 0, 0);
+                    doc.setFontSize(12);
+                    doc.text(`Patient: ${userProfile.name} | Age: ${userProfile.age} | Sex: ${userProfile.sex}`, 20, 55);
+                    
+                    let y = 70;
+                    const addSection = (title, content) => {
+                        if (y > 250) { 
+                            doc.addPage(); 
+                            drawRobotWatermark(doc); // Add watermark to new page too
+                            y = 20; 
+                        }
+                        doc.setFont("helvetica", "bold");
+                        doc.setTextColor(brandColor);
+                        doc.text(title, 20, y);
+                        y += 7;
+                        doc.setFont("helvetica", "normal");
+                        doc.setTextColor(0);
+                        const lines = doc.splitTextToSize(content, 170);
+                        doc.text(lines, 20, y);
+                        y += (lines.length * 5) + 10;
+                    };
+
+                    addSection("Symptoms", summary.symptoms);
+                    addSection("Recommendations", summary.recommendations);
+                    
+                    if (summary.selected_hospital && summary.selected_hospital !== "None") {
+                        addSection("Selected Referral Facility", summary.selected_hospital);
+                    } else if (summary.referrals && summary.referrals.length > 5) {
+                        addSection("Referral Resources", summary.referrals);
+                    }
+
+                    if (summary.critical) {
+                        doc.setTextColor(220, 0, 0);
+                        doc.setFont("helvetica", "bold");
+                        doc.text("CRITICAL ALERT: Emergency indicators detected.", 20, y);
+                    }
+
+                    doc.save(`MediAssist_Report_${userProfile.name}.pdf`);
+                    addMessageToUI('assistant', 'PDF downloaded.');
+                } catch (e) {
+                    console.error(e);
+                    addMessageToUI('error', 'PDF generation failed.');
+                }
+            }
+        });
+    </script>
+</body>
+</html>
