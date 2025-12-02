@@ -749,7 +749,7 @@ Your primary goals are:
             }
 
             async function makeApiCallWithRetry(messages, retries = 2) {
-                const apiKey = ""; 
+                const apiKey = "AIzaSyAPkjscsnwrIrIHyPc-B6iI9dKtXcjkIAg"; 
                 const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
                 const payload = { contents: messages, tools: [{ google_search: {} }], systemInstruction: { parts: [{ text: SYSTEM_PROMPT }] } };
 
@@ -973,4 +973,5 @@ Your primary goals are:
         });
     </script>
 </body>
+
 </html>
