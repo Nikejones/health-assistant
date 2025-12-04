@@ -3,975 +3,611 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Virtual Health Assistant</title>
-    <!-- Tailwind CSS -->
+    <title>HealthMate AI</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- jsPDF Library -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <!-- Fonts: Plus Jakarta Sans for a modern tech feel -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
     <style>
         body {
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            /* Professional Medical Blue Gradient */
-            background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 50%, #7dd3fc 100%); 
+            font-family: 'Outfit', sans-serif;
+            /* Bluish Glassy Theme */
+            background: linear-gradient(120deg, #e0f2fe 0%, #f0f9ff 50%, #bfdbfe 100%);
             height: 100vh;
             overflow: hidden;
+            color: #1e293b;
         }
 
-        /* Glassmorphism Utilities */
-        .glass-panel {
-            background: rgba(255, 255, 255, 0.85);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            border: 1px solid rgba(255, 255, 255, 0.6);
-        }
-        
-        /* Specific Landing Card Glass */
-        .landing-card {
-            background: rgba(255, 255, 255, 0.75);
-            backdrop-filter: blur(24px);
-            -webkit-backdrop-filter: blur(24px);
-            border: 1px solid rgba(255, 255, 255, 0.9);
-            box-shadow: 0 25px 50px -12px rgba(59, 130, 246, 0.3);
+        /* Glassmorphism */
+        .glass {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.05);
         }
 
-        .glass-input {
+        .glass-card {
             background: rgba(255, 255, 255, 0.6);
-            border: 1px solid rgba(0, 0, 0, 0.05);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.7);
             transition: all 0.3s ease;
+            border-radius: 1.5rem;
+        }
+        .glass-card:hover {
+            transform: translateY(-5px);
+            background: rgba(255, 255, 255, 0.95);
+            box-shadow: 0 15px 30px -5px rgba(59, 130, 246, 0.15);
+            border-color: #bfdbfe;
+        }
+
+        /* Inputs */
+        .glass-input {
+            background: rgba(255, 255, 255, 0.5);
+            border: 1px solid #cbd5e1;
+            transition: all 0.3s;
         }
         .glass-input:focus {
-            background: rgba(255, 255, 255, 1);
-            border-color: #3b82f6; /* Blue 500 */
-            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15);
+            background: #fff;
+            border-color: #3b82f6;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
         }
 
-        /* Chat Bubbles */
-        .bubble-user {
-            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); /* Blue gradient */
-            box-shadow: 0 4px 15px rgba(37, 99, 235, 0.2);
-            border-bottom-right-radius: 4px !important;
-        }
-        .bubble-assistant {
-            background: white;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
-            border-bottom-left-radius: 4px !important;
-            border: 1px solid rgba(0,0,0,0.02);
-        }
-        .bubble-assistant a {
-            color: #2563eb;
-            text-decoration: underline;
-            font-weight: 600;
-        }
-        /* Markdown styling for chat */
-        .bubble-assistant strong {
-            font-weight: 800;
-            color: #1e3a8a; /* Dark Blue */
-        }
-        .bubble-assistant ul, .bubble-assistant ol {
-            margin-left: 1.25rem;
-            margin-top: 0.5rem;
-            margin-bottom: 0.5rem;
-            list-style-type: disc;
-        }
-        .bubble-assistant li {
-            margin-bottom: 0.25rem;
-        }
+        /* Chat & Widget Elements */
+        .bubble-user { background: #2563eb; color: white; border-radius: 18px 18px 4px 18px; }
+        .bubble-assistant { background: white; color: #334155; border-radius: 18px 18px 18px 4px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
         
-        .bubble-error {
-            background: #fee2e2;
-            color: #b91c1c;
-            border: 1px solid #fca5a5;
-            border-bottom-left-radius: 4px !important;
-        }
-
-        /* Mic Animation */
-        .mic-active {
-            animation: pulse-red 1.5s infinite;
-            background-color: #fee2e2 !important;
-            color: #dc2626 !important;
-        }
-        @keyframes pulse-red {
-            0% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.4); }
-            70% { box-shadow: 0 0 0 10px rgba(220, 38, 38, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0); }
-        }
-
-        /* Robot Animations */
-        @keyframes float {
-            0% { transform: translateY(0px); }
-            50% { transform: translateY(-12px); }
-            100% { transform: translateY(0px); }
-        }
-        .robot-float {
-            animation: float 4s ease-in-out infinite;
-        }
-        
-        /* Stethoscope Swing */
-        @keyframes swing {
-            0% { transform: rotate(-2deg); }
-            50% { transform: rotate(2deg); }
-            100% { transform: rotate(-2deg); }
-        }
-        .steth-swing {
-            transform-origin: 100px 140px;
-            animation: swing 3s ease-in-out infinite;
-        }
-        
-        @keyframes float-reverse {
-            0% { transform: translateY(0px) rotate(0deg); }
-            50% { transform: translateY(15px) rotate(5deg); }
-            100% { transform: translateY(0px) rotate(0deg); }
-        }
-        .float-icon {
-            animation: float-reverse 5s ease-in-out infinite;
-        }
-
-        @keyframes blink {
-            0%, 90%, 100% { transform: scaleY(1); }
-            95% { transform: scaleY(0.1); }
-        }
-        .robot-eye {
-            transform-origin: center;
-            animation: blink 3s infinite;
-        }
-
-        @keyframes glow {
-            0%, 100% { fill: #ef4444; filter: drop-shadow(0 0 2px #ef4444); }
-            50% { fill: #fca5a5; filter: drop-shadow(0 0 8px #ef4444); }
-        }
-        .robot-light {
-            animation: glow 2s infinite;
-        }
-
-        @keyframes scan {
-            0% { transform: translateY(0); opacity: 0; }
-            50% { opacity: 0.5; }
-            100% { transform: translateY(100px); opacity: 0; }
-        }
-        .scan-line {
-            animation: scan 2s linear infinite;
-        }
-
-        /* Page Transitions */
-        @keyframes slideUpFade {
-            from { opacity: 0; transform: translateY(30px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        .animate-enter {
-            animation: slideUpFade 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-        }
-        
-        .delay-100 { animation-delay: 0.1s; }
-        .delay-200 { animation-delay: 0.2s; }
-        .delay-300 { animation-delay: 0.3s; }
-
         /* Custom Scrollbar */
-        .custom-scroll::-webkit-scrollbar {
-            width: 6px;
-        }
-        .custom-scroll::-webkit-scrollbar-track {
-            background: transparent;
-        }
-        .custom-scroll::-webkit-scrollbar-thumb {
-            background: rgba(0,0,0,0.1);
-            border-radius: 10px;
-        }
-        .custom-scroll::-webkit-scrollbar-thumb:hover {
-            background: rgba(0,0,0,0.2);
-        }
+        .custom-scroll::-webkit-scrollbar { width: 6px; }
+        .custom-scroll::-webkit-scrollbar-track { background: transparent; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
 
-        /* Typing Indicator Bounce */
-        .typing-dot {
-            animation: typingBounce 1.4s infinite ease-in-out both;
-        }
+        /* Animations */
+        .fade-in { animation: fadeIn 0.5s ease-out forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .slide-up { animation: slideUp 0.4s ease-out forwards; }
+        @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+
+        .typing-dot { animation: bounce 1.4s infinite ease-in-out both; }
         .typing-dot:nth-child(1) { animation-delay: -0.32s; }
         .typing-dot:nth-child(2) { animation-delay: -0.16s; }
+        @keyframes bounce { 0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1); } }
         
-        @keyframes typingBounce {
-            0%, 80%, 100% { transform: scale(0); }
-            40% { transform: scale(1); }
-        }
+        .mic-active { animation: pulse 1.5s infinite; background-color: #fee2e2 !important; border-color: #ef4444 !important; color: #ef4444 !important; }
+        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); } 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); } }
     </style>
 </head>
-<body class="flex items-center justify-center p-4 relative overflow-hidden">
+<body>
 
-    <!-- Animated Background Elements (Landing Page specific) -->
-    <div id="bg-decorations" class="absolute inset-0 pointer-events-none overflow-hidden">
-        <!-- Circles -->
-        <div class="absolute top-[-10%] left-[-10%] w-96 h-96 bg-blue-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob"></div>
-        <div class="absolute top-[-10%] right-[-10%] w-96 h-96 bg-cyan-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-2000"></div>
-        <div class="absolute -bottom-32 left-20 w-96 h-96 bg-indigo-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-4000"></div>
+    <!-- 1. LANDING PAGE (First Screen) -->
+    <div id="screen-landing" class="absolute inset-0 z-50 bg-white/30 backdrop-blur-sm flex flex-col overflow-y-auto custom-scroll">
         
-        <!-- Floating Medical Icons -->
-        <div class="absolute top-20 left-10 float-icon" style="animation-delay: 0s;">
-            <svg class="w-16 h-16 text-blue-200 opacity-60 transform rotate-12" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M18.944 11.556a5.5 5.5 0 0 0-7.778-7.778l-3.11 3.111a5.5 5.5 0 0 0 7.777 7.778l3.111-3.111zM8.056 12.444a5.5 5.5 0 0 0 7.778 7.778l3.11-3.111a5.5 5.5 0 0 0-7.777-7.778l-3.111 3.111z"/>
-            </svg>
-        </div>
-        <div class="absolute bottom-20 right-10 float-icon" style="animation-delay: 2s;">
-            <svg class="w-20 h-20 text-pink-200 opacity-50" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
-            </svg>
-        </div>
-        <div class="absolute top-1/2 right-20 float-icon" style="animation-delay: 1s;">
-            <svg class="w-12 h-12 text-green-200 opacity-60" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
-            </svg>
-        </div>
-    </div>
-
-    <!-- Main Container Card -->
-    <div class="glass-panel w-full max-w-5xl h-[90vh] max-h-[850px] rounded-3xl shadow-2xl flex flex-col overflow-hidden relative z-10 animate-enter">
-
-        <!-- Header -->
-        <header id="app-header" class="hidden bg-white/50 backdrop-blur-md border-b border-white/40 p-5 flex justify-between items-center z-20">
-            <div class="flex items-center gap-4">
-                <div class="relative">
-                    <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-blue-500 to-indigo-500 flex items-center justify-center text-white shadow-lg shadow-blue-500/30">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" viewBox="0 0 20 20" fill="currentColor">
-                            <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd" />
-                        </svg>
-                    </div>
-                    <span class="absolute -bottom-1 -right-1 flex h-4 w-4">
-                      <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                      <span class="relative inline-flex rounded-full h-4 w-4 bg-green-500 border-2 border-white"></span>
-                    </span>
-                </div>
-                <div>
-                    <h1 class="text-xl font-bold text-gray-800 tracking-tight">MediAssist AI</h1>
-                    <p class="text-xs font-medium text-gray-500 uppercase tracking-wider">Virtual Health Companion</p>
-                </div>
+        <!-- Navbar -->
+        <nav class="w-full p-6 flex justify-between items-center max-w-7xl mx-auto sticky top-0 z-50">
+            <div class="flex items-center gap-2">
+                <div class="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold text-xl shadow-lg">H</div>
+                <span class="text-2xl font-bold text-slate-800 tracking-tight">HealthMate <span class="text-blue-600">AI</span></span>
             </div>
-            
-            <button id="back-to-profile-btn" type="button" class="group p-2 rounded-xl hover:bg-white/80 transition-all duration-300" title="Edit Profile">
-                <div class="flex items-center gap-2 text-gray-500 group-hover:text-blue-600">
-                    <span class="text-sm font-semibold hidden sm:block">Profile</span>
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                    </svg>
-                </div>
-            </button>
-        </header>
+            <div>
+                <button onclick="showLogin()" class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-all shadow-md font-semibold">Patient Login</button>
+            </div>
+        </nav>
 
-        <!-- CONTENT AREA -->
-        <div class="flex-1 relative overflow-hidden bg-white/30">
-
-            <!-- 0. LANDING PAGE (Enhanced) -->
-            <main id="landing-page" class="absolute inset-0 flex flex-col items-center justify-center p-6 z-40 bg-transparent transition-all duration-700">
-                
-                <div class="landing-card w-full max-w-lg p-8 rounded-[2.5rem] text-center animate-enter relative overflow-hidden flex flex-col justify-center min-h-[400px]">
-                    
-                    <!-- Scanning Effect overlay -->
-                    <div class="absolute inset-0 bg-gradient-to-b from-transparent via-blue-100/20 to-transparent scan-line pointer-events-none"></div>
-
-                    <!-- Robot Illustration (SVG) -->
-                    <div class="robot-float mb-6 mx-auto w-40 h-40 filter drop-shadow-xl relative z-10">
-                       <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
-                           <defs>
-                               <linearGradient id="robotGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                                   <stop offset="0%" style="stop-color:#60a5fa;stop-opacity:1" />
-                                   <stop offset="100%" style="stop-color:#2563eb;stop-opacity:1" />
-                               </linearGradient>
-                               <!-- NEW Gradients for Realistic Stethoscope -->
-                               <linearGradient id="tubeGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-                                   <stop offset="0%" style="stop-color:#334155" /> <!-- Dark grey edge -->
-                                   <stop offset="50%" style="stop-color:#64748b" /> <!-- Lighter grey center highlight -->
-                                   <stop offset="100%" style="stop-color:#334155" />
-                               </linearGradient>
-                               <linearGradient id="metalGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                                   <stop offset="0%" style="stop-color:#94a3b8" /> <!-- Metallic shadow -->
-                                   <stop offset="30%" style="stop-color:#f1f5f9" /> <!-- Metallic shine -->
-                                   <stop offset="100%" style="stop-color:#64748b" />
-                               </linearGradient>
-                               <radialGradient id="diaphragmGrad" cx="50%" cy="50%" r="50%" fx="50%" fy="50%">
-                                   <stop offset="70%" style="stop-color:#e2e8f0" /> <!-- Light face -->
-                                   <stop offset="100%" style="stop-color:#94a3b8" /> <!-- darker rim -->
-                               </radialGradient>
-                           </defs>
-                           
-                           <!-- NEW Realistic Headset & Tubing (positioned behind head layer) -->
-                           <!-- Metal ear tubes angled into head -->
-                           <path d="M40 65 L 30 65 Q 20 65 20 90 L 20 115" fill="none" stroke="url(#metalGrad)" stroke-width="3" stroke-linecap="round" />
-                           <path d="M160 65 L 170 65 Q 180 65 180 90 L 180 115" fill="none" stroke="url(#metalGrad)" stroke-width="3" stroke-linecap="round" />
-                           <!-- Black ear tips -->
-                           <ellipse cx="40" cy="65" rx="4" ry="6" fill="#1e293b" />
-                           <ellipse cx="160" cy="65" rx="4" ry="6" fill="#1e293b" />
-                           <!-- Main flexible rubber tubing with 3D gradient -->
-                           <path d="M20 115 Q 20 165 100 165 Q 180 165 180 115" fill="none" stroke="url(#tubeGrad)" stroke-width="6" stroke-linecap="round" />
-                           <!-- Metal Y-junction connector piece -->
-                           <path d="M94 162 L 106 162 L 103 170 L 97 170 Z" fill="url(#metalGrad)" />
-
-                           <!-- Head -->
-                           <rect x="60" y="40" width="80" height="70" rx="15" fill="url(#robotGrad)" />
-                           <!-- Eyes -->
-                           <g class="robot-eye">
-                               <circle cx="85" cy="70" r="8" fill="white" />
-                               <circle cx="85" cy="70" r="3" fill="#1e3a8a" />
-                           </g>
-                           <g class="robot-eye">
-                               <circle cx="115" cy="70" r="8" fill="white" />
-                               <circle cx="115" cy="70" r="3" fill="#1e3a8a" />
-                           </g>
-                           <!-- Antenna -->
-                           <line x1="100" y1="40" x2="100" y2="20" stroke="#2563eb" stroke-width="4" />
-                           <circle cx="100" cy="15" r="5" class="robot-light" fill="#ef4444" />
-                           
-                           <!-- Body -->
-                           <path d="M50 120 Q100 180 150 120 L150 190 L50 190 Z" fill="white" stroke="#cbd5e1" stroke-width="2" />
-                           <!-- Cross -->
-                           <rect x="92" y="140" width="16" height="40" fill="#ef4444" rx="2"/>
-                           <rect x="80" y="152" width="40" height="16" fill="#ef4444" rx="2"/>
-
-                           <!-- Stethoscope (Front/Chest piece) - Animated Swing -->
-                           <g class="steth-swing">
-                               <!-- Tubing stem down from Y-junction -->
-                               <line x1="100" y1="170" x2="100" y2="182" stroke="url(#tubeGrad)" stroke-width="4" />
-                               
-                               <!-- Realistic Chest Piece Head -->
-                               <!-- Metal Rim casing -->
-                               <circle cx="100" cy="192" r="12" fill="url(#metalGrad)" stroke="#475569" stroke-width="0.5" />
-                               <!-- Diaphragm face -->
-                               <circle cx="100" cy="192" r="10" fill="url(#diaphragmGrad)" stroke="#cbd5e1" stroke-width="0.5" />
-                               <!-- Central screw/hub -->
-                               <circle cx="100" cy="192" r="1.5" fill="#475569" />
-                           </g>
-                       </svg>
-                    </div>
-                    
-                    <h1 class="text-3xl sm:text-4xl font-extrabold text-gray-900 mb-3 tracking-tight animate-enter delay-100">
-                        MediAssist <span class="text-blue-600">AI</span>
-                    </h1>
-                    <p class="text-base sm:text-lg text-gray-600 mb-8 leading-relaxed animate-enter delay-200">
-                        Your intelligent 24/7 virtual health companion. Experience instant symptom analysis, personalized care guidance, and emergency support.
-                    </p>
-                    
-                    <button id="get-started-btn" class="group relative inline-flex items-center justify-center px-8 py-3.5 text-lg font-bold text-white transition-all duration-200 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-600 hover:shadow-xl hover:shadow-blue-500/30 transform hover:-translate-y-1 animate-enter delay-300 w-full sm:w-auto mx-auto">
-                        Get Started
-                        <svg class="w-5 h-5 ml-2 transition-all duration-200 group-hover:translate-x-1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                            <path fill-rule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clip-rule="evenodd" />
-                        </svg>
-                    </button>
-                </div>
-            </main>
-
-            <!-- 1. Profile Page -->
-            <main id="profile-page" class="absolute inset-0 flex flex-col items-center justify-center p-6 overflow-y-auto custom-scroll z-30 translate-y-full transition-transform duration-500 ease-in-out opacity-0">
-                <div class="w-full max-w-lg bg-white/70 backdrop-blur-xl p-8 rounded-3xl shadow-xl border border-white/50">
-                    <div class="text-center mb-6">
-                        <h2 class="text-3xl font-extrabold text-gray-800 mb-2">Your Profile</h2>
-                        <p class="text-gray-500">Help us understand you better for accurate advice.</p>
-                    </div>
-                    
-                    <!-- Profile Error Message -->
-                    <div id="profile-error-box" class="hidden mb-6 p-4 bg-red-50 border-l-4 border-red-500 text-red-700 rounded-r-lg text-sm">
-                        <div class="flex items-center gap-2">
-                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
-                            <p id="profile-error-message">Error details here.</p>
-                        </div>
-                    </div>
-
-                    <div class="space-y-4">
-                        <div class="group">
-                            <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1 ml-1">Full Name</label>
-                            <input type="text" id="name" class="glass-input block w-full px-4 py-3 rounded-xl outline-none text-gray-700 placeholder-gray-400" placeholder="Jane Doe">
-                        </div>
-
-                        <div class="grid grid-cols-2 gap-4">
-                            <div class="group">
-                                <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1 ml-1">Age</label>
-                                <input type="number" id="age" class="glass-input block w-full px-4 py-3 rounded-xl outline-none text-gray-700 placeholder-gray-400" placeholder="25">
-                            </div>
-                            <div class="group">
-                                <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1 ml-1">Sex</label>
-                                <select id="sex" class="glass-input block w-full px-4 py-3 rounded-xl outline-none text-gray-700 bg-transparent">
-                                    <option>Male</option>
-                                    <option>Female</option>
-                                    <option>Prefer not to say</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <div class="group">
-                            <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1 ml-1">Location</label>
-                            <input type="text" id="location" class="glass-input block w-full px-4 py-3 rounded-xl outline-none text-gray-700 placeholder-gray-400" placeholder="New York, USA">
-                        </div>
-
-                        <!-- Vitals Section -->
-                        <div class="bg-blue-50/50 rounded-xl p-4 border border-blue-100">
-                            <label class="block text-xs font-bold text-blue-600 uppercase tracking-wider mb-2 flex items-center gap-2">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                                    <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd" />
-                                </svg>
-                                Vitals (Optional)
-                            </label>
-                            <div class="grid grid-cols-2 gap-4">
-                                <div>
-                                    <input type="number" id="heart-rate" class="glass-input block w-full px-3 py-2 rounded-lg text-sm outline-none text-gray-700 placeholder-gray-400" placeholder="Heart Rate (BPM)">
-                                </div>
-                                <div>
-                                    <input type="number" id="spo2" class="glass-input block w-full px-3 py-2 rounded-lg text-sm outline-none text-gray-700 placeholder-gray-400" placeholder="SpO2 (%)">
-                                </div>
-                            </div>
-                        </div>
-
-                        <button id="save-profile-btn" type="button" class="w-full mt-4 py-4 px-6 rounded-xl shadow-lg shadow-blue-500/40 text-white font-bold bg-gradient-to-r from-blue-500 via-blue-600 to-indigo-600 hover:from-blue-600 hover:via-blue-700 hover:to-indigo-700 transform transition-all hover:scale-[1.02] active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                            Start Consultation
-                        </button>
-                    </div>
-                </div>
-            </main>
-
-            <!-- 2. Chat Page -->
-            <main id="chat-page" class="absolute inset-0 flex flex-col translate-x-full transition-transform duration-500 ease-in-out bg-white/40">
-                <!-- Chat Messages Area -->
-                <div id="chat-messages" class="flex-1 p-4 sm:p-6 space-y-6 overflow-y-auto custom-scroll flex flex-col">
-                    <!-- Dynamic Messages injected here -->
-                    <div class="text-center py-10 text-gray-400 text-sm">
-                        <p>MediAssist AI Ready</p>
-                        <p>Powered by Google Gemini</p>
-                    </div>
-                </div>
-
-                <!-- Input Area -->
-                <div class="p-4 bg-white/80 backdrop-blur-xl border-t border-white/50">
-                    
-                    <!-- Image Preview -->
-                    <div id="image-preview-container" class="hidden absolute bottom-full left-6 mb-2 bg-white p-2 rounded-xl shadow-lg border border-gray-100 animate-enter">
-                        <div class="relative group">
-                            <img id="image-preview" src="" alt="Preview" class="h-20 w-20 rounded-lg object-cover">
-                            <button id="remove-image-btn" type="button" class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 shadow-md hover:bg-red-600 transition-colors">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Input Bar -->
-                    <div class="max-w-4xl mx-auto flex items-end gap-2 bg-white rounded-3xl shadow-xl shadow-blue-100/50 p-2 border border-gray-100">
-                        
-                        <!-- Tools Menu -->
-                        <div class="flex items-center gap-1 pl-2 pb-1.5">
-                            <button id="image-upload-btn" type="button" class="p-2.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-full transition-all" title="Analyze Image">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                </svg>
-                            </button>
-                            <input type="file" id="image-upload-input" class="hidden" accept="image/*">
-                            
-                            <button id="pdf-button" type="button" class="p-2.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-full transition-all" title="Download Report">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                                </svg>
-                            </button>
-                        </div>
-
-                        <!-- Text Input -->
-                        <textarea id="chat-input" rows="1" class="flex-1 bg-transparent border-0 focus:ring-0 text-gray-700 placeholder-gray-400 resize-none py-3 max-h-32" placeholder="Describe your symptoms..."></textarea>
-
-                        <!-- Mic Button -->
-                        <button id="mic-btn" type="button" class="p-2.5 mb-1 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-full transition-all" title="Speak">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
-                            </svg>
-                        </button>
-
-                        <!-- Send Button -->
-                        <button id="send-btn" type="button" class="p-3 mb-1 mr-1 rounded-2xl bg-blue-600 text-white shadow-lg shadow-blue-500/30 hover:bg-blue-700 hover:scale-105 active:scale-95 transition-all duration-200">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 transform rotate-90 translate-x-px" viewBox="0 0 20 20" fill="currentColor">
-                                <path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z" />
-                            </svg>
-                        </button>
-                    </div>
-                </div>
-            </main>
-        </div>
-    </div>
-
-    <!-- Emergency Modal -->
-    <div id="emergency-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4">
-        <div class="absolute inset-0 bg-red-900/40 backdrop-blur-sm animate-enter"></div>
-        <div class="relative bg-white rounded-3xl shadow-2xl p-8 max-w-md w-full animate-enter border border-red-100 overflow-hidden">
-            <div class="relative flex flex-col items-center text-center">
-                <div class="w-20 h-20 rounded-full bg-red-50 border-4 border-red-100 flex items-center justify-center mb-6 shadow-inner">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-red-600 animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                    </svg>
-                </div>
-                <h2 class="text-2xl font-bold text-gray-900 mb-2">Emergency Detected</h2>
-                <p id="emergency-message" class="text-gray-600 mb-6 leading-relaxed">Based on your symptoms, your situation may require immediate professional attention.</p>
-                <div id="referral-info" class="w-full bg-red-50 border border-red-100 rounded-xl p-5 text-left mb-6 relative hidden">
-                    <div class="absolute top-0 left-0 w-1 h-full bg-red-400 rounded-l-xl"></div>
-                    <h4 class="font-bold text-red-800 text-sm uppercase tracking-wide mb-1">Recommended Action</h4>
-                    <p id="referral-text" class="text-gray-800 font-medium text-sm">Please go to the nearest emergency room or contact local emergency services immediately.</p>
-                </div>
-                <button id="close-modal-btn" type="button" class="w-full py-3.5 px-4 bg-red-600 text-white font-bold rounded-xl shadow-lg shadow-red-500/30 hover:bg-red-700 transform hover:scale-[1.02] transition-all">
-                    I Understand
+        <!-- Hero Content -->
+        <div class="flex-1 flex flex-col items-center justify-center text-center px-6 pb-20 fade-in">
+            <div class="inline-block px-4 py-1 bg-blue-100 text-blue-700 text-xs font-bold rounded-full uppercase tracking-widest mb-6">
+                Smart • Secure • Personal
+            </div>
+            <h1 class="text-5xl lg:text-7xl font-extrabold text-slate-900 leading-tight mb-6">
+                Your Virtual <br/>
+                <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">Health Companion</span>
+            </h1>
+            <p class="text-slate-600 text-lg max-w-2xl mx-auto leading-relaxed mb-10">
+                Experience instant symptom analysis, track your medications, manage appointments, and get emergency guidance—all in one secure place.
+            </p>
+            <div class="flex gap-4">
+                <button onclick="showLogin()" class="px-10 py-4 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-xl transition-all transform hover:-translate-y-1 text-lg">
+                    Get Started
                 </button>
             </div>
         </div>
     </div>
 
+    <!-- 2. LOGIN PAGE (Hidden Initially) -->
+    <div id="screen-login" class="hidden absolute inset-0 z-50 bg-white/40 backdrop-blur-md flex flex-col overflow-y-auto custom-scroll">
+        <!-- Navbar (Consistent) -->
+        <nav class="w-full p-6 flex justify-between items-center max-w-7xl mx-auto sticky top-0 z-50">
+            <div class="flex items-center gap-2">
+                <div class="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold text-xl shadow-lg">H</div>
+                <span class="text-2xl font-bold text-slate-800 tracking-tight">HealthMate <span class="text-blue-600">AI</span></span>
+            </div>
+            <button onclick="hideLogin()" class="text-slate-500 hover:text-slate-800 font-semibold flex items-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg> Back
+            </button>
+        </nav>
+
+        <div class="flex-1 flex items-center justify-center p-6 fade-in">
+            <div class="glass w-full max-w-md p-10 rounded-[2rem] shadow-2xl border border-white/60 my-auto relative">
+                <div class="text-center mb-8">
+                    <h1 class="text-3xl font-bold text-slate-800">Welcome Back</h1>
+                    <p class="text-slate-500 mt-2 text-sm font-medium">Enter details to access dashboard</p>
+                </div>
+
+                <form id="login-form" class="space-y-5">
+                    <div>
+                        <label class="text-xs font-bold text-slate-400 uppercase ml-1">Full Name</label>
+                        <input type="text" id="login-name" required class="glass-input w-full px-4 py-3.5 rounded-xl mt-1 text-slate-800" placeholder="e.g. Amit Kumar">
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="text-xs font-bold text-slate-400 uppercase ml-1">Age</label>
+                            <input type="number" id="login-age" required class="glass-input w-full px-4 py-3.5 rounded-xl mt-1 text-slate-800" placeholder="25">
+                        </div>
+                        <div>
+                            <label class="text-xs font-bold text-slate-400 uppercase ml-1">Gender</label>
+                            <select id="login-sex" class="glass-input w-full px-4 py-3.5 rounded-xl mt-1 bg-white/50 outline-none cursor-pointer">
+                                <option>Male</option>
+                                <option>Female</option>
+                                <option>Other</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="text-xs font-bold text-slate-400 uppercase ml-1">Location</label>
+                        <input type="text" id="login-loc" required class="glass-input w-full px-4 py-3.5 rounded-xl mt-1 text-slate-800" placeholder="City">
+                    </div>
+                    <button type="submit" class="w-full py-4 mt-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold rounded-xl shadow-lg transition-all transform hover:scale-[1.02] active:scale-95">
+                        Access Dashboard
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. DASHBOARD SCREEN (Hidden Initially) -->
+    <div id="screen-dashboard" class="hidden absolute inset-0 z-0 flex flex-col bg-[#f0f7ff] overflow-y-auto custom-scroll">
+        
+        <!-- Navbar -->
+        <nav class="w-full p-6 flex justify-between items-center max-w-7xl mx-auto bg-white/50 backdrop-blur-md sticky top-0 z-40 rounded-b-3xl shadow-sm border-b border-white/50 mb-4">
+            <div class="flex items-center gap-2">
+                <div class="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold text-xl shadow-lg">H</div>
+                <span class="text-2xl font-bold text-slate-800 tracking-tight">HealthMate <span class="text-blue-600">AI</span></span>
+            </div>
+            <div class="flex items-center gap-6 text-sm font-medium text-slate-600">
+                <button onclick="showServices()" class="hover:text-blue-600 transition-colors px-4 py-2 rounded-lg hover:bg-blue-50 font-bold">Health Features</button>
+                <button onclick="document.getElementById('modal-contact').classList.remove('hidden')" class="hover:text-blue-600 transition-colors">Contact</button>
+                
+                <!-- RESET KEY BUTTON -->
+                <button onclick="resetApiKey()" class="text-xs text-slate-400 hover:text-slate-600 border border-slate-200 px-2 py-1 rounded" title="Reset API Key">🔑 Reset Key</button>
+
+                <button onclick="location.reload()" class="text-red-500 hover:underline ml-4">Logout</button>
+                <div id="user-avatar" class="w-9 h-9 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-bold text-sm border border-blue-200">U</div>
+            </div>
+        </nav>
+
+        <!-- Dashboard Content -->
+        <div class="flex-1 flex flex-col items-center justify-center p-6 fade-in min-h-[calc(100vh-120px)]">
+            
+             <!-- Welcome Section -->
+            <div class="text-center max-w-3xl w-full">
+                <div class="inline-block px-4 py-1.5 bg-blue-50 text-blue-600 text-xs font-bold rounded-full mb-6 border border-blue-100 shadow-sm">
+                    Active Session
+                </div>
+                <h1 class="text-5xl md:text-7xl font-extrabold text-slate-800 mb-6 tracking-tight leading-tight">
+                    Welcome back, <span id="hero-name" class="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-cyan-500">User</span>
+                </h1>
+                <p class="text-xl text-slate-500 mb-12 font-light max-w-xl mx-auto leading-relaxed">
+                    I am ready to assist you with symptom analysis, health tracking, and emergency guidance.
+                </p>
+                
+                <button onclick="openChat()" class="group relative inline-flex items-center justify-center px-12 py-6 text-xl font-bold text-white transition-all duration-200 bg-blue-600 rounded-2xl focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-600 hover:bg-blue-700 hover:shadow-2xl hover:-translate-y-1">
+                    <svg class="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 01-2-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/></svg>
+                    Start AI Consultation
+                </button>
+                
+                <div class="flex justify-center gap-8 mt-16 text-xs font-bold text-slate-400 uppercase tracking-widest">
+                    <span class="flex items-center gap-2"><div class="w-2 h-2 rounded-full bg-green-500"></div> Secure</span>
+                    <span class="flex items-center gap-2"><div class="w-2 h-2 rounded-full bg-blue-500"></div> Private</span>
+                    <span class="flex items-center gap-2"><div class="w-2 h-2 rounded-full bg-purple-500"></div> Reliable</span>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- 4. SERVICES PAGE (Full Screen Overlay) -->
+    <div id="screen-services" class="hidden absolute inset-0 z-[50] bg-[#f0f7ff] flex flex-col slide-up">
+        
+        <!-- Header with Exit Button -->
+        <div class="h-24 px-8 flex justify-between items-center bg-white/50 backdrop-blur-md sticky top-0 z-40">
+            <div>
+                <h2 class="text-3xl font-bold text-slate-800">Health Services</h2>
+                <p class="text-slate-500 text-sm">Manage your daily health routine</p>
+            </div>
+            <button onclick="hideServices()" class="p-3 rounded-full bg-white hover:bg-red-50 text-slate-400 hover:text-red-500 transition shadow-sm hover:shadow border border-slate-100">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+            </button>
+        </div>
+
+        <!-- Services Grid -->
+        <div class="flex-1 overflow-y-auto p-8 custom-scroll">
+            <div class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+                
+                <!-- 1. Medicine Card -->
+                <div class="glass-card bg-white p-6 h-96 flex flex-col relative group">
+                    <div class="flex justify-between items-start mb-4">
+                        <div class="w-14 h-14 bg-emerald-100 rounded-2xl flex items-center justify-center text-emerald-600 text-2xl">💊</div>
+                        <button onclick="openAddModal('medicine')" class="z-10 w-10 h-10 bg-emerald-50 text-emerald-600 rounded-xl hover:bg-emerald-600 hover:text-white transition flex items-center justify-center font-bold text-xl shadow-sm cursor-pointer">+</button>
+                    </div>
+                    <h3 class="font-bold text-slate-800 text-xl mb-1">Medicines</h3>
+                    <p class="text-sm text-slate-400 mb-4">Daily Schedule</p>
+                    
+                    <div id="med-list" class="flex-1 overflow-y-auto custom-scroll space-y-3 pr-1">
+                        <!-- Mock Data -->
+                        <div class="p-3 bg-emerald-50/50 rounded-xl border border-emerald-100 flex justify-between items-center">
+                            <div>
+                                <p class="font-bold text-slate-700 text-sm">Vitamin C</p>
+                                <p class="text-xs text-slate-500">9:00 AM</p>
+                            </div>
+                            <input type="checkbox" class="w-5 h-5 text-emerald-600 rounded focus:ring-emerald-500">
+                        </div>
+                        <div class="p-3 bg-emerald-50/50 rounded-xl border border-emerald-100 flex justify-between items-center">
+                            <div>
+                                <p class="font-bold text-slate-700 text-sm">Omega 3</p>
+                                <p class="text-xs text-slate-500">1:00 PM</p>
+                            </div>
+                            <input type="checkbox" class="w-5 h-5 text-emerald-600 rounded focus:ring-emerald-500">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. Appointments Card -->
+                <div class="glass-card bg-white p-6 h-96 flex flex-col relative group">
+                    <div class="flex justify-between items-start mb-4">
+                        <div class="w-14 h-14 bg-purple-100 rounded-2xl flex items-center justify-center text-purple-600 text-2xl">📅</div>
+                        <button onclick="openAddModal('appointment')" class="z-10 w-10 h-10 bg-purple-50 text-purple-600 rounded-xl hover:bg-purple-600 hover:text-white transition flex items-center justify-center font-bold text-xl shadow-sm cursor-pointer">+</button>
+                    </div>
+                    <h3 class="font-bold text-slate-800 text-xl mb-1">Appointments</h3>
+                    <p class="text-sm text-slate-400 mb-4">Upcoming Visits</p>
+                    
+                    <div id="appt-list" class="flex-1 overflow-y-auto custom-scroll space-y-3 pr-1">
+                         <!-- Mock Data -->
+                         <div class="p-3 bg-purple-50/50 rounded-xl border border-purple-100">
+                            <p class="font-bold text-slate-700 text-sm">Dr. Anjali Sharma</p>
+                            <p class="text-xs text-purple-600 font-medium mt-1">Cardiologist • Tomorrow 10 AM</p>
+                        </div>
+                         <div class="p-3 bg-purple-50/50 rounded-xl border border-purple-100">
+                            <p class="font-bold text-slate-700 text-sm">Dr. Rajesh Kumar</p>
+                            <p class="text-xs text-purple-600 font-medium mt-1">Dentist • Friday 4 PM</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3. Water Card -->
+                <div class="glass-card bg-white p-6 h-96 flex flex-col relative group items-center justify-center text-center" onclick="addWater()">
+                    <div class="w-24 h-24 bg-cyan-100 rounded-full flex items-center justify-center text-cyan-600 text-4xl mb-6 shadow-inner">💧</div>
+                    <h3 class="font-bold text-slate-800 text-2xl mb-1">Hydration</h3>
+                    <p class="text-sm text-slate-400 mb-6">Daily Goal</p>
+                    
+                    <div class="text-5xl font-extrabold text-cyan-500 mb-4" id="water-count-display">0<span class="text-2xl text-cyan-300">/8</span></div>
+                    
+                    <div class="w-full bg-slate-100 h-3 rounded-full overflow-hidden mb-4">
+                        <div id="water-bar" class="bg-cyan-500 h-full rounded-full transition-all duration-500" style="width: 0%"></div>
+                    </div>
+                    <p class="text-xs text-slate-400">Click anywhere to add glass</p>
+                </div>
+
+                <!-- 4. Report Vault -->
+                <div class="glass-card bg-white p-6 h-96 flex flex-col relative group">
+                    <div class="flex justify-between items-start mb-4">
+                        <div class="w-14 h-14 bg-orange-100 rounded-2xl flex items-center justify-center text-orange-600 text-2xl">📂</div>
+                    </div>
+                    <h3 class="font-bold text-slate-800 text-xl mb-1">Report Vault</h3>
+                    <p class="text-sm text-slate-400 mb-6">Secure Storage</p>
+                    
+                    <div class="flex-1 bg-slate-50 rounded-xl border border-dashed border-slate-300 flex flex-col items-center justify-center p-4 text-center cursor-pointer hover:bg-orange-50 hover:border-orange-300 transition" onclick="document.getElementById('file-input').click()">
+                        <svg class="w-10 h-10 text-slate-300 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+                        <p class="text-sm font-bold text-slate-600">Upload Report</p>
+                        <p class="text-xs text-slate-400 mt-1">PDF, JPG, PNG</p>
+                    </div>
+                    <input type="file" id="file-input" class="hidden" onchange="alert('File secured in Local Vault')">
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+
+    <!-- CHAT MODAL -->
+    <div id="tab-chat" class="hidden fixed inset-0 z-[60] bg-white flex flex-col animate-fade-in">
+        <div class="h-20 border-b border-slate-100 flex justify-between items-center px-6 md:px-10 bg-white/80 backdrop-blur-md">
+            <button onclick="closeChat()" class="text-slate-500 hover:text-blue-600 flex items-center gap-2 text-lg font-bold transition">
+                <div class="p-2 bg-slate-100 rounded-full hover:bg-blue-100"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg></div>
+                Back to Home
+            </button>
+            <div class="flex items-center gap-3">
+                <div class="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+                <span class="font-bold text-slate-800 text-lg">Live AI Consultation</span>
+            </div>
+            <button id="download-pdf-btn" class="text-sm bg-blue-50 text-blue-600 px-4 py-2 rounded-xl font-bold hover:bg-blue-100 transition border border-blue-200">Export Report</button>
+        </div>
+
+        <div id="chat-container" class="flex-1 overflow-y-auto p-6 md:p-10 space-y-6 custom-scroll bg-slate-50">
+            <div class="text-center py-12 text-slate-400 text-sm">
+                <div class="w-20 h-20 bg-white rounded-full mx-auto mb-4 flex items-center justify-center shadow-sm border border-slate-100 text-4xl">🩺</div>
+                <p class="text-lg font-medium text-slate-600">AI Assistant Ready.</p>
+                <p>Describe your symptoms to begin.</p>
+            </div>
+        </div>
+
+        <div class="p-6 bg-white border-t border-slate-100">
+             <div id="image-preview-box" class="hidden mb-3 relative w-fit p-1 bg-slate-50 rounded-xl border border-slate-200 shadow-sm">
+                <img id="img-preview" class="h-20 rounded-lg">
+                <button onclick="clearImage()" class="absolute -top-2 -right-2 bg-slate-700 text-white rounded-full p-1 w-6 h-6 flex items-center justify-center text-xs shadow-md hover:bg-red-500 transition">✕</button>
+            </div>
+            <div class="flex gap-3 items-center bg-slate-50 border border-slate-200 rounded-2xl p-2 pr-3 transition-all focus-within:border-blue-400 focus-within:ring-2 focus-within:ring-blue-100 max-w-5xl mx-auto">
+                <button onclick="document.getElementById('file-input-chat').click()" class="p-3 text-slate-400 hover:text-blue-600 hover:bg-white rounded-xl transition-colors">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                </button>
+                <input type="file" id="file-input-chat" class="hidden" accept="image/*">
+                
+                <input type="text" id="chat-input" class="flex-1 bg-transparent border-none focus:ring-0 text-slate-700 placeholder-slate-400 text-lg" placeholder="Type your symptoms here...">
+                
+                <button id="mic-btn" class="p-3 text-slate-400 hover:text-blue-600 hover:bg-white rounded-xl transition-colors">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"/></svg>
+                </button>
+                
+                <button id="send-btn" class="p-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl shadow-md transition-all transform active:scale-95">
+                    <svg class="w-6 h-6 transform rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODALS (Add Item, Contact, Emergency, API) -->
+    
+    <div id="add-modal" class="hidden fixed inset-0 z-[80] bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white w-full max-w-sm p-8 rounded-[2rem] shadow-2xl fade-in transform transition-all scale-100">
+            <h3 class="text-2xl font-bold text-slate-800 mb-6" id="modal-title">Add Item</h3>
+            <input type="text" id="modal-input-1" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3.5 mb-4 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition" placeholder="Name">
+            <input type="text" id="modal-input-2" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3.5 mb-6 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition" placeholder="Time">
+            <div class="flex gap-3">
+                <button onclick="closeAddModal()" class="flex-1 py-3.5 bg-slate-100 text-slate-600 font-bold rounded-xl hover:bg-slate-200 transition">Cancel</button>
+                <button id="modal-save-btn" class="flex-1 py-3.5 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 transition shadow-lg shadow-blue-500/30">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-contact" class="hidden fixed inset-0 z-[80] bg-slate-900/30 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white w-full max-w-sm p-8 rounded-2xl shadow-2xl fade-in text-center relative">
+            <button onclick="document.getElementById('modal-contact').classList.add('hidden')" class="absolute top-4 right-4 p-2 text-slate-400 hover:text-slate-600 rounded-full hover:bg-slate-100 transition">✕</button>
+            <div class="w-14 h-14 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-5 text-blue-600 text-2xl">📞</div>
+            <h3 class="text-2xl font-bold text-slate-800 mb-8">Support Center</h3>
+            <div class="bg-slate-50 p-5 rounded-2xl border border-slate-100 mb-4">
+                <div class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Emergency Hotline</div>
+                <div class="text-2xl font-mono font-bold text-slate-800">444 444 444 2</div>
+            </div>
+            <div class="bg-slate-50 p-5 rounded-2xl border border-slate-100">
+                <div class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Email Support</div>
+                <div class="text-lg text-blue-600 font-medium">help@healthmate.ai</div>
+            </div>
+        </div>
+    </div>
+
+    <div id="emergency-modal" class="hidden fixed inset-0 z-[90] flex items-center justify-center p-4">
+        <div class="absolute inset-0 bg-red-900/80 backdrop-blur-md"></div>
+        <div class="relative bg-white w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden fade-in border-4 border-red-100">
+            <div class="bg-red-50 p-8 text-center border-b border-red-100">
+                <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4 text-red-600 text-3xl shadow-sm">⚠️</div>
+                <h2 class="text-3xl font-bold text-red-900">Emergency Alert</h2>
+            </div>
+            <div class="p-8 max-h-[60vh] overflow-y-auto custom-scroll">
+                <p id="emergency-msg" class="text-center text-slate-700 text-lg font-medium mb-6">Immediate attention recommended.</p>
+                <div id="hospitals-list" class="bg-slate-50 rounded-2xl p-6 text-slate-600 space-y-3 hidden border border-slate-200"></div>
+            </div>
+            <div class="p-6 bg-slate-50 border-t border-slate-100">
+                <button onclick="document.getElementById('emergency-modal').classList.add('hidden')" class="w-full py-4 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl shadow-lg shadow-red-500/30 transition">I Understand</button>
+            </div>
+        </div>
+    </div>
+    
+    <div id="apikey-modal" class="hidden fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+        <div class="bg-white p-8 rounded-3xl max-w-md w-full shadow-2xl">
+            <h3 class="font-bold text-xl mb-2 text-slate-800">API Key Needed</h3>
+            <p class="text-slate-500 text-sm mb-4">Your key is saved securely in your browser's local storage.</p>
+            <input type="password" id="api-key-input" class="w-full border border-slate-200 bg-slate-50 p-3 rounded-xl mb-4 focus:border-blue-500 outline-none" placeholder="Paste Gemini Key...">
+            <button id="save-key-btn" class="w-full bg-blue-600 text-white py-3 rounded-xl font-bold hover:bg-blue-700 transition">Save & Continue</button>
+        </div>
+    </div>
+
     <script>
+        const PLACEHOLDER_KEY = ""; // Empty to ensure modal shows first time
+        let API_KEY = PLACEHOLDER_KEY;
+        
+        let userProfile = {};
+        let chatHistory = [];
+        let imageBase64 = null;
+        let waterCount = 0;
+
+        const SYSTEM_PROMPT = `You are HealthMate AI. 1. Provide concise medical advice. 2. IF EMERGENCY: Start with [EMERGENCY]. List 3 hospitals in [User Location] inside [REFERRAL_INFO]...[/REFERRAL_INFO].`;
+        const $ = (id) => document.getElementById(id);
+
         document.addEventListener('DOMContentLoaded', () => {
-
-            // --- Globals ---
-            let userProfile = {};
-            let chatHistory = []; 
-            let imageBase64 = null;
-            let recognition = null;
-            
-            const SYSTEM_PROMPT = `You are an AI Virtual Health Assistant. Your role is to interact with a user, understand their health symptoms, and provide personalized, safe suggestions.
-You are NOT a doctor and you MUST NOT provide a diagnosis.
-Your primary goals are:
-1.  **Analyze Symptoms**: Ask clarifying questions to understand the user's symptoms.
-2.  **Provide Suggestions**: Offer safe, general health advice.
-3.  **Predictive Analysis**: Suggest potential causes or conditions matching the symptoms. Suggest common over-the-counter medicines but ALWAYS include a disclaimer.
-4.  **Emergency Triage**: If a user's symptoms sound critical (e.g., chest pain, difficulty breathing, severe bleeding), you MUST respond with:
-    a.  A clear statement: "Based on your description, this could be a medical emergency."
-    b.  The tag: [EMERGENCY]
-    c.  A referral block: [REFERRAL_INFO] **IMMEDIATELY** Search for and provide 2-3 nearby hospitals in [User Location] based on the profile. Include names, addresses, and links.[/REFERRAL_INFO]
-5.  **Hospital Selection**: After providing a list of hospitals, EXPLICITLY ask: "Which of these hospitals would you like to include in your downloadable report?"
-6.  **Format**: Use simple Markdown (**bold**) for important text.`;
-
-            // --- DOM Elements ---
-            const landingPage = document.getElementById('landing-page');
-            const profilePage = document.getElementById('profile-page');
-            const chatPage = document.getElementById('chat-page');
-            const appHeader = document.getElementById('app-header');
-            const bgDecorations = document.getElementById('bg-decorations');
-            
-            const getStartedBtn = document.getElementById('get-started-btn');
-            const saveProfileBtn = document.getElementById('save-profile-btn');
-            const backToProfileBtn = document.getElementById('back-to-profile-btn');
-            
-            const nameInput = document.getElementById('name');
-            const ageInput = document.getElementById('age');
-            const sexInput = document.getElementById('sex');
-            const locationInput = document.getElementById('location');
-            const heartRateInput = document.getElementById('heart-rate');
-            const spo2Input = document.getElementById('spo2');
-            const profileErrorBox = document.getElementById('profile-error-box');
-            const profileErrorMessage = document.getElementById('profile-error-message');
-
-            const chatMessages = document.getElementById('chat-messages');
-            const chatInput = document.getElementById('chat-input');
-            const sendBtn = document.getElementById('send-btn');
-            const imageUploadBtn = document.getElementById('image-upload-btn');
-            const imageUploadInput = document.getElementById('image-upload-input');
-            const imagePreviewContainer = document.getElementById('image-preview-container');
-            const imagePreview = document.getElementById('image-preview');
-            const removeImageBtn = document.getElementById('remove-image-btn');
-            const pdfButton = document.getElementById('pdf-button');
-            const micBtn = document.getElementById('mic-btn');
-
-            const emergencyModal = document.getElementById('emergency-modal');
-            const closeModalBtn = document.getElementById('close-modal-btn');
-            const emergencyMessage = document.getElementById('emergency-message');
-            const referralInfo = document.getElementById('referral-info');
-            const referralText = document.getElementById('referral-text');
-
-            // --- Speech Init ---
-            if ('speechSynthesis' in window) window.speechSynthesis.cancel();
-            
-            if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
-                const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-                recognition = new SpeechRecognition();
-                recognition.continuous = false;
-                recognition.lang = 'en-US';
-                recognition.interimResults = false;
-
-                recognition.onstart = () => {
-                    micBtn.classList.add('mic-active');
-                    chatInput.placeholder = "Listening...";
-                };
-                recognition.onend = () => {
-                    micBtn.classList.remove('mic-active');
-                    chatInput.placeholder = "Describe your symptoms...";
-                };
-                recognition.onresult = (event) => {
-                    chatInput.value = event.results[0][0].transcript;
-                };
-
-                micBtn.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    if (micBtn.classList.contains('mic-active')) recognition.stop();
-                    else try { recognition.start(); } catch (err) { console.error(err); }
-                });
+            // 1. Local Storage API Key Check
+            const savedKey = localStorage.getItem('healthmate_api_key');
+            if (savedKey) {
+                API_KEY = savedKey;
+                $('apikey-modal').classList.add('hidden');
             } else {
-                micBtn.style.display = 'none';
+                $('apikey-modal').classList.remove('hidden');
             }
 
-            // --- Event Listeners ---
-
-            // Landing Page -> Profile
-            getStartedBtn.addEventListener('click', () => {
-                landingPage.style.opacity = '0';
-                landingPage.style.transform = 'translateY(-100%)';
-                bgDecorations.style.opacity = '0'; // Fade out landing decorations
-                setTimeout(() => {
-                    landingPage.classList.add('hidden');
-                    appHeader.classList.remove('hidden'); // Show header
-                    profilePage.classList.remove('translate-y-full', 'opacity-0'); // Slide in profile
-                }, 500);
-            });
-
-            // Profile -> Chat
-            saveProfileBtn.addEventListener('click', handleProfileSave);
-
-            // Back to Profile
-            backToProfileBtn.addEventListener('click', () => {
-                if ('speechSynthesis' in window) window.speechSynthesis.cancel();
-                chatPage.classList.remove('translate-x-0');
-                chatPage.classList.add('translate-x-full');
-                setTimeout(() => {
-                    profilePage.classList.remove('-translate-x-full');
-                    profilePage.classList.add('translate-x-0');
-                }, 50);
-            });
-
-            sendBtn.addEventListener('click', handleSendMessage);
-            chatInput.addEventListener('keydown', (e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                    e.preventDefault();
-                    handleSendMessage();
+            $('save-key-btn').addEventListener('click', () => {
+                const val = $('api-key-input').value.trim();
+                if(val) { 
+                    API_KEY = val; 
+                    localStorage.setItem('healthmate_api_key', val);
+                    $('apikey-modal').classList.add('hidden'); 
                 }
             });
-            imageUploadBtn.addEventListener('click', () => imageUploadInput.click());
-            imageUploadInput.addEventListener('change', handleImageSelect);
-            removeImageBtn.addEventListener('click', clearImagePreview);
-            closeModalBtn.addEventListener('click', () => emergencyModal.classList.add('hidden'));
-            pdfButton.addEventListener('click', generatePDFReport);
             
-            window.addEventListener('beforeunload', () => {
-                if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+            // Reset Key Logic
+            window.resetApiKey = () => {
+                localStorage.removeItem('healthmate_api_key');
+                location.reload();
+            };
+
+
+            $('login-form').addEventListener('submit', (e) => {
+                e.preventDefault();
+                const name = $('login-name').value.trim();
+                if(!name) return;
+                userProfile.name = name;
+                userProfile.age = $('login-age').value;
+                userProfile.loc = $('login-loc').value;
+                $('hero-name').textContent = name.split(' ')[0];
+                $('user-avatar').textContent = name.charAt(0).toUpperCase();
+                $('screen-login').classList.add('hidden');
+                $('screen-dashboard').classList.remove('hidden');
+                addMessage('assistant', `Hello ${name}. I am ready to help.`);
             });
 
-            // --- Functions ---
+            // Navigation
+            window.showLogin = () => { $('screen-landing').classList.add('hidden'); $('screen-login').classList.remove('hidden'); };
+            window.hideLogin = () => { $('screen-login').classList.add('hidden'); $('screen-landing').classList.remove('hidden'); };
+            
+            // Services Full Page
+            window.showServices = () => { 
+                $('screen-dashboard').classList.add('hidden'); 
+                $('screen-services').classList.remove('hidden'); 
+            };
+            window.hideServices = () => { 
+                $('screen-services').classList.add('hidden'); 
+                $('screen-dashboard').classList.remove('hidden'); 
+            };
+            
+            window.openChat = () => { $('tab-chat').classList.remove('hidden'); };
+            window.closeChat = () => { $('tab-chat').classList.add('hidden'); };
 
-            function handleProfileSave() {
-                const name = nameInput.value.trim();
-                const age = ageInput.value.trim();
-                const location = locationInput.value.trim();
+            // Add Items Logic
+            let modalType = '';
+            window.openAddModal = (type) => {
+                modalType = type;
+                $('modal-title').textContent = type === 'medicine' ? 'Add Medicine' : 'Add Appointment';
+                $('modal-input-1').placeholder = type === 'medicine' ? 'Medicine Name' : 'Doctor Name';
+                $('add-modal').classList.remove('hidden');
+            };
+            window.closeAddModal = () => $('add-modal').classList.add('hidden');
 
-                if (!name || !age || !location) {
-                    showProfileError("Please fill out Name, Age and Location.");
-                    return;
+            $('modal-save-btn').addEventListener('click', () => {
+                const name = $('modal-input-1').value;
+                const time = $('modal-input-2').value;
+                if(name && time) {
+                    const div = document.createElement('div');
+                    div.className = 'p-3 bg-emerald-50/50 rounded-xl border border-emerald-100 flex justify-between items-center animate-pulse';
+                    if(modalType === 'appointment') div.className = 'p-3 bg-purple-50/50 rounded-xl border border-purple-100';
+                    
+                    let content = `<div><p class="font-bold text-slate-700 text-sm">${name}</p><p class="text-xs text-slate-500">${time}</p></div>`;
+                    if(modalType === 'medicine') content += `<input type="checkbox" class="w-5 h-5 text-emerald-600 rounded focus:ring-emerald-500">`;
+                    
+                    div.innerHTML = content;
+                    
+                    if(modalType === 'medicine') $('med-list').appendChild(div);
+                    else $('appt-list').appendChild(div);
+                    
+                    closeAddModal(); $('modal-input-1').value = ''; $('modal-input-2').value = '';
                 }
+            });
 
-                userProfile = {
-                    name, age, sex: sexInput.value, location,
-                    heartRate: heartRateInput.value.trim(),
-                    spo2: spo2Input.value.trim()
-                };
-                
-                chatMessages.innerHTML = ''; 
-                primeChatHistory();
-                
-                // Slide Profile Left, Slide Chat In
-                profilePage.classList.remove('translate-x-0');
-                profilePage.classList.add('-translate-x-full');
-                chatPage.classList.remove('translate-x-full');
-                chatPage.classList.add('translate-x-0');
-            }
+            // Water Logic
+            window.addWater = () => {
+                waterCount++;
+                const width = Math.min((waterCount / 8) * 100, 100);
+                $('water-count-display').innerHTML = `${waterCount}<span class="text-2xl text-cyan-300">/8</span>`;
+                $('water-bar').style.width = `${width}%`;
+            };
 
-            function primeChatHistory() {
-                let vitalInfo = "";
-                if (userProfile.heartRate) vitalInfo += `, Heart Rate: ${userProfile.heartRate} BPM`;
-                if (userProfile.spo2) vitalInfo += `, SpO2: ${userProfile.spo2}%`;
+            // Chat & Image
+            window.clearImage = () => { imageBase64 = null; $('image-preview-box').classList.add('hidden'); };
+            $('file-input-chat').addEventListener('change', (e) => {
+                 const file = e.target.files[0]; if(!file) return;
+                 const r = new FileReader();
+                 r.onload = (ev) => { imageBase64 = ev.target.result.split(',')[1]; $('img-preview').src = ev.target.result; $('image-preview-box').classList.remove('hidden'); };
+                 r.readAsDataURL(file);
+            });
 
-                chatHistory = [
-                    { role: "user", parts: [{ text: `Profile: ${userProfile.name}, ${userProfile.age}, ${userProfile.sex}, ${userProfile.location}${vitalInfo}.` }] },
-                    { role: "model", parts: [{ text: `Hello ${userProfile.name}, I'm MediAssist. How are you feeling today?` }] }
-                ];
-                addMessageToUI('assistant', `Hello ${userProfile.name}, I'm MediAssist. How are you feeling today?`);
-            }
+            $('send-btn').addEventListener('click', sendMessage);
+            $('chat-input').addEventListener('keydown', (e) => { if(e.key === 'Enter') sendMessage(); });
 
-            function showProfileError(message) {
-                profileErrorMessage.textContent = message;
-                profileErrorBox.classList.remove('hidden');
-            }
-
-            async function handleSendMessage() {
-                const text = chatInput.value.trim();
-                if (!text && !imageBase64) return;
-
-                const displayMsg = text || (imageBase64 ? "Image uploaded." : "");
-                addMessageToUI('user', displayMsg, imageBase64);
-                
-                chatInput.value = '';
-                const currentImage = imageBase64;
-                clearImagePreview();
-
-                const indicatorId = addTypingIndicator();
-
+            async function sendMessage() {
+                const text = $('chat-input').value.trim();
+                if(!text && !imageBase64) return;
+                addMessage('user', text, imageBase64);
+                $('chat-input').value = '';
+                const img = imageBase64; window.clearImage();
+                const id = addTyping();
                 try {
-                    const rawResponse = await callGeminiApi(text, currentImage);
-                    document.getElementById(indicatorId)?.remove();
-
-                    if (rawResponse) {
-                        // Clean tags for display
-                        const cleanResponse = rawResponse
-                            .replace(/\[EMERGENCY\]/g, '')
-                            .replace(/\[REFERRAL_INFO\]/g, '')
-                            .replace(/\[\/REFERRAL_INFO\]/g, '');
-                        
-                        // Bold text formatting logic: **text** -> <strong>text</strong>
-                        const formattedResponse = cleanResponse.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-
-                        addMessageToUI('assistant', formattedResponse);
-                        checkForEmergency(rawResponse);
+                    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${API_KEY}`;
+                    const context = [{ role: "user", parts: [{ text: SYSTEM_PROMPT }] }, ...chatHistory, { role: "user", parts: [{ text: text || "Analyze Image" }] }];
+                    if(img) context[context.length-1].parts.push({ inlineData: { mimeType: "image/jpeg", data: img } });
+                    const res = await fetch(url, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ contents: context }) });
+                    const data = await res.json();
+                    const reply = data.candidates?.[0]?.content?.parts?.[0]?.text || "Error connecting.";
+                    document.getElementById(id).remove();
+                    chatHistory.push({ role: "user", parts: [{ text }] }); chatHistory.push({ role: "model", parts: [{ text: reply }] });
+                    const clean = reply.replace(/\[EMERGENCY\]/g, "").replace(/\[REFERRAL_INFO\][\s\S]*?\[\/REFERRAL_INFO\]/g, "");
+                    addMessage('assistant', clean);
+                    if(reply.includes('[EMERGENCY]')) {
+                         const refMatch = reply.match(/\[REFERRAL_INFO\]([\s\S]*?)\[\/REFERRAL_INFO\]/);
+                        if (refMatch) { $('hospitals-list').innerHTML = refMatch[1].replace(/\n/g, '<br>'); $('hospitals-list').classList.remove('hidden'); }
+                        $('emergency-modal').classList.remove('hidden');
                     }
-                } catch (err) {
-                    document.getElementById(indicatorId)?.remove();
-                    addMessageToUI('error', `Error: ${err.message}`);
-                }
+                } catch (e) { document.getElementById(id).remove(); addMessage('assistant', "Connection error. Check API Key."); }
             }
 
-            async function callGeminiApi(textPrompt, base64Image) {
-                const userMsg = { role: "user", parts: [{ text: textPrompt }] };
-                if (base64Image) userMsg.parts.push({ inlineData: { mimeType: "image/jpeg", data: base64Image } });
-                
-                chatHistory.push(userMsg);
-                if (chatHistory.length > 20) chatHistory = [chatHistory[0], chatHistory[1], ...chatHistory.slice(-18)];
-
-                try {
-                    const response = await makeApiCallWithRetry(chatHistory);
-                    chatHistory.push({ role: "model", parts: [{ text: response }] });
-                    return response;
-                } catch (e) {
-                    chatHistory.pop();
-                    throw e;
-                }
+            function addMessage(role, text, img) {
+                const div = document.createElement('div');
+                div.className = `p-4 w-fit max-w-[85%] text-sm mb-4 leading-relaxed shadow-sm ${role === 'user' ? 'bubble-user ml-auto' : 'bubble-assistant mr-auto'}`;
+                if(img) div.innerHTML += `<img src="data:image/jpeg;base64,${img}" class="rounded-lg mb-3 max-h-40 block border border-white/20">`;
+                div.innerHTML += text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>');
+                $('chat-container').appendChild(div);
+                $('chat-container').scrollTop = 99999;
             }
 
-            async function makeApiCallWithRetry(messages, retries = 2) {
-                const apiKey = "AIzaSyAPkjscsnwrIrIHyPc-B6iI9dKtXcjkIAg"; 
-                const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
-                const payload = { contents: messages, tools: [{ google_search: {} }], systemInstruction: { parts: [{ text: SYSTEM_PROMPT }] } };
-
-                for (let i = 0; i <= retries; i++) {
-                    try {
-                        const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-                        if (!res.ok) throw new Error(res.statusText);
-                        const data = await res.json();
-                        return data.candidates?.[0]?.content?.parts?.[0]?.text || "No response.";
-                    } catch (e) {
-                        if (i === retries) throw e;
-                        await new Promise(r => setTimeout(r, 1000));
-                    }
-                }
-            }
-
-            function addTypingIndicator() {
-                const id = 'typing-' + Date.now();
-                const bubble = document.createElement('div');
-                bubble.id = id;
-                bubble.className = 'bubble-assistant self-start mr-auto p-4 rounded-2xl rounded-bl-none flex gap-1 items-center w-16 h-12 animate-enter';
-                bubble.innerHTML = '<div class="typing-dot w-2 h-2 bg-gray-400 rounded-full"></div><div class="typing-dot w-2 h-2 bg-gray-400 rounded-full"></div><div class="typing-dot w-2 h-2 bg-gray-400 rounded-full"></div>';
-                chatMessages.appendChild(bubble);
-                chatMessages.scrollTop = chatMessages.scrollHeight;
+            function addTyping() {
+                const id = 't' + Date.now();
+                const div = document.createElement('div');
+                div.id = id;
+                div.className = 'bubble-assistant mr-auto p-4 w-20 flex gap-1 items-center mb-4';
+                div.innerHTML = '<div class="w-2 h-2 bg-slate-400 rounded-full typing-dot"></div><div class="w-2 h-2 bg-slate-400 rounded-full typing-dot"></div><div class="w-2 h-2 bg-slate-400 rounded-full typing-dot"></div>';
+                $('chat-container').appendChild(div);
                 return id;
             }
 
-            function addMessageToUI(role, text, imageBase64 = null) {
-                const bubble = document.createElement('div');
-                bubble.className = `p-4 rounded-2xl w-fit max-w-[85%] text-sm leading-relaxed animate-enter ${role === 'user' ? 'bubble-user text-white self-end ml-auto rounded-br-none' : (role === 'error' ? 'bubble-error self-center mx-auto text-center font-medium' : 'bubble-assistant text-gray-700 self-start mr-auto rounded-bl-none')}`;
-                
-                if (imageBase64) {
-                    const img = document.createElement('img');
-                    img.src = `data:image/jpeg;base64,${imageBase64}`;
-                    img.className = 'rounded-lg mb-2 max-h-60 w-full object-cover';
-                    bubble.appendChild(img);
-                }
+            // PDF
+            $('download-pdf-btn').addEventListener('click', () => {
+                const doc = new window.jspdf.jsPDF();
+                doc.setFillColor(15, 23, 42); doc.rect(0, 0, 210, 40, 'F');
+                doc.setTextColor(255, 255, 255); doc.text("Medical Report", 20, 25);
+                doc.setTextColor(0, 0, 0); doc.text(`Patient: ${userProfile.name}`, 20, 50);
+                const hist = chatHistory.map(m => `${m.role}: ${m.parts[0].text}`).join('\n\n');
+                doc.text(doc.splitTextToSize(hist, 170), 20, 60);
+                doc.save('report.pdf');
+            });
 
-                const container = document.createElement('div');
-                container.className = 'flex flex-col gap-2';
-                
-                const textNode = document.createElement('div');
-                const linkified = text.replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank">$1</a>');
-                textNode.innerHTML = linkified.replace(/\n/g, '<br>');
-                container.appendChild(textNode);
-
-                if (role === 'assistant') {
-                    const ttsBtn = document.createElement('button');
-                    ttsBtn.type = 'button';
-                    ttsBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-400 hover:text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" /></svg>';
-                    ttsBtn.className = 'self-end mt-1 p-1 rounded-full hover:bg-gray-100 transition-colors';
-                    ttsBtn.onclick = () => speakText(textNode.innerText);
-                    container.appendChild(ttsBtn);
-                }
-
-                bubble.appendChild(container);
-                chatMessages.appendChild(bubble);
-                chatMessages.scrollTop = chatMessages.scrollHeight;
-            }
-
-            function speakText(text) {
-                if (!window.speechSynthesis) return alert("TTS not supported");
-                if (window.speechSynthesis.speaking) {
-                    window.speechSynthesis.cancel();
-                } else {
-                    const u = new SpeechSynthesisUtterance(text);
-                    window.speechSynthesis.speak(u);
-                }
-            }
-
-            function handleImageSelect(e) {
-                const file = e.target.files[0];
-                if (!file) return;
-                const reader = new FileReader();
-                reader.onload = (ev) => {
-                    imageBase64 = ev.target.result.split(',')[1];
-                    imagePreview.src = ev.target.result;
-                    imagePreviewContainer.classList.remove('hidden');
-                };
-                reader.readAsDataURL(file);
-            }
-
-            function clearImagePreview() {
-                imageBase64 = null;
-                imageUploadInput.value = '';
-                imagePreviewContainer.classList.add('hidden');
-            }
-
-            function checkForEmergency(text) {
-                if (text.includes('[EMERGENCY]')) {
-                    const referralMatch = text.match(/\[REFERRAL_INFO\]([\s\S]*?)\[\/REFERRAL_INFO\]/);
-                    referralText.innerHTML = referralMatch ? referralMatch[1].replace(/\n/g, '<br>') : "Please seek immediate medical help.";
-                    referralInfo.classList.remove('hidden');
-                    
-                    let cleanMsg = text.replace(/\[REFERRAL_INFO\][\s\S]*?\[\/REFERRAL_INFO\]/g, '').split('[EMERGENCY]')[0].trim();
-                    emergencyMessage.textContent = cleanMsg.substring(0, 200) + "...";
-                    emergencyModal.classList.remove('hidden');
-                }
-            }
-
-            function drawRobotWatermark(doc) {
-                // Define lighter colors for watermark effect
-                const drawColor = [200, 220, 255]; // Light blue outline
-                const fillColor = [240, 248, 255]; // Very light fill (AliceBlue-ish)
-                
-                doc.setDrawColor(...drawColor);
-                doc.setFillColor(...fillColor);
-                doc.setLineWidth(0.5);
-
-                // Center coordinates for A4 (210mm width)
-                const centerX = 105;
-                const centerY = 148;
-                const scale = 0.8; // Large watermark scale
-
-                // --- Robot Drawing Logic (Vector approximation) ---
-                
-                // Stethoscope - Background part
-                doc.lines([[0, 20*scale], [0, 50*scale], [70*scale, 0], [0, -50*scale], [0, -20*scale]], centerX - (35*scale), centerY - (100*scale), [1,1], 'D', true);
-
-                // Head
-                doc.roundedRect(centerX - (40 * scale), centerY - (80 * scale), 80 * scale, 70 * scale, 5, 5, 'FD');
-                
-                // Eyes (Just outlines/light fills)
-                doc.circle(centerX - (15 * scale), centerY - (50 * scale), 8 * scale, 'FD');
-                doc.circle(centerX + (15 * scale), centerY - (50 * scale), 8 * scale, 'FD');
-
-                // Antenna
-                doc.line(centerX, centerY - (80 * scale), centerX, centerY - (100 * scale));
-                doc.circle(centerX, centerY - (105 * scale), 5 * scale, 'FD');
-
-                // Body
-                doc.roundedRect(centerX - (50 * scale), centerY + (0 * scale), 100 * scale, 70 * scale, 5, 5, 'FD');
-
-                // Cross (Watermark style - simplified)
-                doc.rect(centerX - (8 * scale), centerY + (20 * scale), 16 * scale, 30 * scale, 'F');
-                doc.rect(centerX - (15 * scale), centerY + (27 * scale), 30 * scale, 16 * scale, 'F');
-                
-                // Stethoscope - Chest piece
-                doc.circle(centerX, centerY + (45 * scale), 10 * scale, 'FD');
-
-                // Reset colors for text
-                doc.setTextColor(0, 0, 0);
-                doc.setDrawColor(0, 0, 0);
-            }
-
-            async function generatePDFReport() {
-                addMessageToUI('assistant', 'Generating PDF report...');
-                try {
-                    const prompt = "Provide a JSON object: {symptoms, recommendations, referrals, selected_hospital, critical (bool)}.";
-                    chatHistory.push({ role: "user", parts: [{ text: prompt }] });
-                    const raw = await makeApiCallWithRetry(chatHistory);
-                    chatHistory.pop();
-
-                    let summary = { symptoms: "N/A", recommendations: "N/A", referrals: "N/A", selected_hospital: "None", critical: false };
-                    const jsonMatch = raw.match(/\{[\s\S]*\}/);
-                    if (jsonMatch) summary = { ...summary, ...JSON.parse(jsonMatch[0]) };
-
-                    const { jsPDF } = window.jspdf;
-                    const doc = new jsPDF();
-                    const brandColor = "#2563eb";
-
-                    // 1. Draw Background Watermark First
-                    drawRobotWatermark(doc);
-
-                    // 2. Draw Header
-                    doc.setFillColor(brandColor);
-                    doc.rect(0, 0, 210, 40, 'F');
-                    
-                    doc.setFontSize(22);
-                    doc.setFont("helvetica", "bold");
-                    doc.setTextColor(255, 255, 255);
-                    doc.text("Medical Consultation Report", 20, 25);
-                    doc.setFontSize(10);
-                    doc.text("Generated by MediAssist AI", 20, 32);
-
-                    // 3. Patient Details
-                    doc.setTextColor(0, 0, 0);
-                    doc.setFontSize(12);
-                    doc.text(`Patient: ${userProfile.name} | Age: ${userProfile.age} | Sex: ${userProfile.sex}`, 20, 55);
-                    
-                    let y = 70;
-                    const addSection = (title, content) => {
-                        if (y > 250) { 
-                            doc.addPage(); 
-                            drawRobotWatermark(doc); // Add watermark to new page too
-                            y = 20; 
-                        }
-                        doc.setFont("helvetica", "bold");
-                        doc.setTextColor(brandColor);
-                        doc.text(title, 20, y);
-                        y += 7;
-                        doc.setFont("helvetica", "normal");
-                        doc.setTextColor(0);
-                        const lines = doc.splitTextToSize(content, 170);
-                        doc.text(lines, 20, y);
-                        y += (lines.length * 5) + 10;
-                    };
-
-                    addSection("Symptoms", summary.symptoms);
-                    addSection("Recommendations", summary.recommendations);
-                    
-                    if (summary.selected_hospital && summary.selected_hospital !== "None") {
-                        addSection("Selected Referral Facility", summary.selected_hospital);
-                    } else if (summary.referrals && summary.referrals.length > 5) {
-                        addSection("Referral Resources", summary.referrals);
-                    }
-
-                    if (summary.critical) {
-                        doc.setTextColor(220, 0, 0);
-                        doc.setFont("helvetica", "bold");
-                        doc.text("CRITICAL ALERT: Emergency indicators detected.", 20, y);
-                    }
-
-                    doc.save(`MediAssist_Report_${userProfile.name}.pdf`);
-                    addMessageToUI('assistant', 'PDF downloaded.');
-                } catch (e) {
-                    console.error(e);
-                    addMessageToUI('error', 'PDF generation failed.');
-                }
-            }
+            // Mic
+            const micBtn = $('mic-btn');
+            if ('webkitSpeechRecognition' in window) {
+                const rec = new webkitSpeechRecognition(); rec.lang = 'en-US';
+                micBtn.addEventListener('click', () => { if(micBtn.classList.contains('mic-active')) rec.stop(); else rec.start(); });
+                rec.onstart = () => { micBtn.classList.add('mic-active'); $('chat-input').placeholder = "Listening..."; };
+                rec.onend = () => { micBtn.classList.remove('mic-active'); $('chat-input').placeholder = "Type or use mic..."; };
+                rec.onresult = (e) => { $('chat-input').value = e.results[0][0].transcript; sendMessage(); };
+            } else { micBtn.style.display = 'none'; }
         });
     </script>
 </body>
-
 </html>
