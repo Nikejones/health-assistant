@@ -82,7 +82,7 @@
 </head>
 <body>
 
-    <!-- 1. LANDING PAGE (First Screen) -->
+    <!-- 1. LANDING PAGE -->
     <div id="screen-landing" class="absolute inset-0 z-50 bg-white/30 backdrop-blur-sm flex flex-col overflow-y-auto custom-scroll">
         
         <!-- Navbar -->
@@ -116,24 +116,15 @@
         </div>
     </div>
 
-    <!-- 2. LOGIN PAGE (Hidden Initially) -->
-    <div id="screen-login" class="hidden absolute inset-0 z-50 bg-white/40 backdrop-blur-md flex flex-col overflow-y-auto custom-scroll">
-        <!-- Navbar (Consistent) -->
-        <nav class="w-full p-6 flex justify-between items-center max-w-7xl mx-auto sticky top-0 z-50">
-            <div class="flex items-center gap-2">
-                <div class="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold text-xl shadow-lg">H</div>
-                <span class="text-2xl font-bold text-slate-800 tracking-tight">HealthMate <span class="text-blue-600">AI</span></span>
-            </div>
-            <button onclick="hideLogin()" class="text-slate-500 hover:text-slate-800 font-semibold flex items-center gap-2">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg> Back
-            </button>
-        </nav>
-
-        <div class="flex-1 flex items-center justify-center p-6 fade-in">
-            <div class="glass w-full max-w-md p-10 rounded-[2rem] shadow-2xl border border-white/60 my-auto relative">
+    <!-- 2. LOGIN PAGE -->
+    <div id="screen-login" class="absolute inset-0 z-50 bg-white/40 backdrop-blur-md overflow-y-auto custom-scroll hidden">
+        <div class="min-h-full flex items-center justify-center p-6">
+            <div class="glass w-full max-w-md p-10 rounded-[2rem] shadow-2xl fade-in relative overflow-hidden">
+                 <button onclick="hideLogin()" class="absolute top-4 right-4 p-2 text-slate-400 hover:text-slate-600 transition">✕</button>
                 <div class="text-center mb-8">
-                    <h1 class="text-3xl font-bold text-slate-800">Welcome Back</h1>
-                    <p class="text-slate-500 mt-2 text-sm font-medium">Enter details to access dashboard</p>
+                    <div class="w-16 h-16 bg-gradient-to-tr from-blue-500 to-cyan-500 rounded-2xl flex items-center justify-center mx-auto mb-4 text-white text-2xl font-bold shadow-lg">H</div>
+                    <h1 class="text-3xl font-bold text-slate-800">HealthMate</h1>
+                    <p class="text-slate-500 mt-2 text-sm font-medium">Your Smart Virtual Health Companion</p>
                 </div>
 
                 <form id="login-form" class="space-y-5">
@@ -159,7 +150,7 @@
                         <label class="text-xs font-bold text-slate-400 uppercase ml-1">Location</label>
                         <input type="text" id="login-loc" required class="glass-input w-full px-4 py-3.5 rounded-xl mt-1 text-slate-800" placeholder="City">
                     </div>
-                    <button type="submit" class="w-full py-4 mt-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold rounded-xl shadow-lg transition-all transform hover:scale-[1.02] active:scale-95">
+                    <button type="submit" class="w-full py-4 mt-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold rounded-xl shadow-lg transition-all transform hover:scale-[1.02] active:scale-95">
                         Access Dashboard
                     </button>
                 </form>
@@ -167,7 +158,7 @@
         </div>
     </div>
 
-    <!-- 3. DASHBOARD SCREEN (Hidden Initially) -->
+    <!-- 3. DASHBOARD SCREEN -->
     <div id="screen-dashboard" class="hidden absolute inset-0 z-0 flex flex-col bg-[#f0f7ff] overflow-y-auto custom-scroll">
         
         <!-- Navbar -->
@@ -179,10 +170,6 @@
             <div class="flex items-center gap-6 text-sm font-medium text-slate-600">
                 <button onclick="showServices()" class="hover:text-blue-600 transition-colors px-4 py-2 rounded-lg hover:bg-blue-50 font-bold">Health Features</button>
                 <button onclick="document.getElementById('modal-contact').classList.remove('hidden')" class="hover:text-blue-600 transition-colors">Contact</button>
-                
-                <!-- RESET KEY BUTTON -->
-                <button onclick="resetApiKey()" class="text-xs text-slate-400 hover:text-slate-600 border border-slate-200 px-2 py-1 rounded" title="Reset API Key">🔑 Reset Key</button>
-
                 <button onclick="location.reload()" class="text-red-500 hover:underline ml-4">Logout</button>
                 <div id="user-avatar" class="w-9 h-9 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-bold text-sm border border-blue-200">U</div>
             </div>
@@ -417,14 +404,13 @@
     <div id="apikey-modal" class="hidden fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
         <div class="bg-white p-8 rounded-3xl max-w-md w-full shadow-2xl">
             <h3 class="font-bold text-xl mb-2 text-slate-800">API Key Needed</h3>
-            <p class="text-slate-500 text-sm mb-4">Your key is saved securely in your browser's local storage.</p>
             <input type="password" id="api-key-input" class="w-full border border-slate-200 bg-slate-50 p-3 rounded-xl mb-4 focus:border-blue-500 outline-none" placeholder="Paste Gemini Key...">
             <button id="save-key-btn" class="w-full bg-blue-600 text-white py-3 rounded-xl font-bold hover:bg-blue-700 transition">Save & Continue</button>
         </div>
     </div>
 
     <script>
-        const PLACEHOLDER_KEY = ""; // Empty to ensure modal shows first time
+        const PLACEHOLDER_KEY = "AIzaSyCGCouG7iSEaWOXSti-EK8LNTTODG8prIU"; 
         let API_KEY = PLACEHOLDER_KEY;
         
         let userProfile = {};
@@ -436,30 +422,11 @@
         const $ = (id) => document.getElementById(id);
 
         document.addEventListener('DOMContentLoaded', () => {
-            // 1. Local Storage API Key Check
-            const savedKey = localStorage.getItem('healthmate_api_key');
-            if (savedKey) {
-                API_KEY = savedKey;
-                $('apikey-modal').classList.add('hidden');
-            } else {
-                $('apikey-modal').classList.remove('hidden');
-            }
-
+            if(!API_KEY || API_KEY.length < 10) $('apikey-modal').classList.remove('hidden');
             $('save-key-btn').addEventListener('click', () => {
                 const val = $('api-key-input').value.trim();
-                if(val) { 
-                    API_KEY = val; 
-                    localStorage.setItem('healthmate_api_key', val);
-                    $('apikey-modal').classList.add('hidden'); 
-                }
+                if(val) { API_KEY = val; $('apikey-modal').classList.add('hidden'); }
             });
-            
-            // Reset Key Logic
-            window.resetApiKey = () => {
-                localStorage.removeItem('healthmate_api_key');
-                location.reload();
-            };
-
 
             $('login-form').addEventListener('submit', (e) => {
                 e.preventDefault();
@@ -550,7 +517,7 @@
                 const img = imageBase64; window.clearImage();
                 const id = addTyping();
                 try {
-                    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${API_KEY}`;
+                    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${API_KEY}`;
                     const context = [{ role: "user", parts: [{ text: SYSTEM_PROMPT }] }, ...chatHistory, { role: "user", parts: [{ text: text || "Analyze Image" }] }];
                     if(img) context[context.length-1].parts.push({ inlineData: { mimeType: "image/jpeg", data: img } });
                     const res = await fetch(url, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ contents: context }) });
